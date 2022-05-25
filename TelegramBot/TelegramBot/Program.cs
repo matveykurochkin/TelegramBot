@@ -12,6 +12,10 @@ namespace TelegramBot
     class TelegramBot
     {
         static ITelegramBotClient bot = new TelegramBotClient("Token");
+
+        static string[] HelloArr = new string[] { "привет", "Привет", "Ку", "ghbdtn", "ку", "дороу", "Дороу" };
+        static string[] WhatsUpArr = new string[] { "Как дела?", "как дела?", "как дела" };
+
         public static async Task updateHandler(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
             Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(update));
@@ -19,16 +23,19 @@ namespace TelegramBot
             {
                 var message = update.Message;
 
+                var hashHelloArr = new HashSet<string>(HelloArr);
+                var hashWhatsUpArr = new HashSet<string>(WhatsUpArr);
+
                 StreamWriter DataBase = new StreamWriter("E:\\DataBase.txt", true);
                 DataBase.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(update));
                 DataBase.Close();
 
-                if (message.Text == "Привет" || message.Text == "привет")
+                if (hashHelloArr.Contains(message.Text))
                 {
                     await botClient.SendTextMessageAsync(message.Chat, "Привет!");
                     return;
                 }
-                else if (message.Text == "Как дела?" || message.Text == "как дела?" || message.Text == "как дела")
+                else if (hashWhatsUpArr.Contains(message.Text))
                 {
                     await botClient.SendTextMessageAsync(message.Chat, "Хорошо, у тебя как?");
                     return;
