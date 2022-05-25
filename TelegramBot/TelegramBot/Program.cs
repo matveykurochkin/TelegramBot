@@ -18,6 +18,11 @@ namespace TelegramBot
             if (update.Type == Telegram.Bot.Types.Enums.UpdateType.Message)
             {
                 var message = update.Message;
+
+                StreamWriter DataBase = new StreamWriter("E:\\DataBase.txt", true);
+                DataBase.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(update));
+                DataBase.Close();
+
                 if (message.Text == "Привет" || message.Text == "привет")
                 {
                     await botClient.SendTextMessageAsync(message.Chat, "Привет!");
@@ -41,7 +46,6 @@ namespace TelegramBot
         static void Main(string[] args)
         {
             Console.WriteLine("Бот " + bot.GetMeAsync().Result.FirstName + " успешно запущен!");
-
             var cts = new CancellationTokenSource();
             var cancellationToken = cts.Token;
             var receiverOptions = new ReceiverOptions { };
