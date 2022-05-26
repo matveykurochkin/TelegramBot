@@ -35,11 +35,12 @@ namespace TelegramBot
 
         public static async Task updateHandler(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
-            Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(update));
+            //Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(update));
             if (update.Type == Telegram.Bot.Types.Enums.UpdateType.Message)
             {
                 var message = update.Message;
-
+                Console.WriteLine("Пользователь "+ message.From.FirstName +" "+ message.From.LastName +" написал боту данное сообщение: " + message.Text);
+                Console.WriteLine("\tid Пользователя "+message.From.Id);
                 var hashHelloArr = new HashSet<string>(HelloArr);
                 var hashWhatsUpArr = new HashSet<string>(WhatsUpArr);
 
