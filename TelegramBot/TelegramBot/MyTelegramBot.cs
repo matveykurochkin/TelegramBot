@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using System.Web;
 using Newtonsoft.Json;
 using Telegram.Bot;
@@ -10,20 +11,18 @@ class MyTelegramBot
 {
     private readonly ITelegramBotClient _telegramBotClient;
 
+    private string? _nameofCity;
+    private double _tempOfCity;
+
     public MyTelegramBot(ITelegramBotClient telegramBotClient)
     {
         _telegramBotClient = telegramBotClient;
     }
 
-    public MyTelegramBot main { get; set; }
-    public float Temp { get; set; }
-
     string[] HelloArr = {"Привет!", "привет", "Привет", "Ку", "ghbdtn", "ку", "дороу", "Дороу"};
     string[] WhatsUpArr = {"Как дела?", "как дела?", "как дела"};
     string[] WeatherCity = {"Владимир", "Москва", "Санкт-Петербург", "Головино", "Боголюбово", "Дубай", "Гусь-Хрустальный"};
 
-    string nameofCity;
-    float tempOfCity;
 
     public IReplyMarkup ButtonOnTGbot()
     {
@@ -102,21 +101,21 @@ class MyTelegramBot
             {
                 foreach (var city in WeatherCity)
                 {
-                    await _telegramBotClient.SendTextMessageAsync(message.Chat.Id, $"{city}\n", cancellationToken: cancellationToken);
+                    await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"{city}\n", cancellationToken: cancellationToken);
                 }
 
                 return;
             }
 
-            if (hashWeatherCity.Contains(message.Text))
+            if (!string.IsNullOrEmpty(message?.Text) && hashWeatherCity.Contains(message.Text))
             {
-                nameofCity = message.Text;
-                await Weather(nameofCity, cancellationToken);
-                await _telegramBotClient.SendTextMessageAsync(message.Chat.Id, $"Температура в {nameofCity}: {Math.Round(tempOfCity)} °C", cancellationToken: cancellationToken);
+                _nameofCity = message.Text;
+                await Weather(_nameofCity, cancellationToken);
+                await _telegramBotClient.SendTextMessageAsync(message.Chat.Id, $"Температура в {_nameofCity}: {Math.Round(_tempOfCity)} °C", cancellationToken: cancellationToken);
                 return;
             }
 
-            await bot.SendTextMessageAsync(message.Chat.Id, "Я не знаю как ответить на это \U0001F914", cancellationToken: cancellationToken);
+            await bot.SendTextMessageAsync(message?.Chat?.Id ?? 0, "Я не знаю как ответить на это \U0001F914", cancellationToken: cancellationToken);
         }
     }
 
@@ -132,11 +131,12 @@ class MyTelegramBot
 
         try
         {
-            var url = $"https://api.openweathermap.org/data/2.5/weather?q={HttpUtility.UrlEncode(cityName)}&appid={HttpUtility.UrlEncode(appid)}";
+            var url = $"https://api.openweathermap.org/data/2.5/weather?q={HttpUtility.UrlEncode(cityName)}&appid={HttpUtility.UrlEncode(appid)}&units=metric";
             using var hc = new HttpClient();
-            var response = await hc.GetStringAsync(url, cancellationToken);
-            var myTelegramBot = JsonConvert.DeserializeObject<MyTelegramBot>(response);
-            tempOfCity = myTelegramBot.main.Temp - 273;
+            var weather = await hc.GetFromJsonAsync<WeatherResponse>(url, cancellationToken);
+            
+            if (weather != null)
+                _tempOfCity = Math.Round(weather.main.temp);
         }
         catch (Exception ex)
         {
