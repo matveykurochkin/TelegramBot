@@ -1,30 +1,36 @@
-﻿using Telegram.Bot;
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Telegram.Bot;
 using Telegram.Bot.Extensions.Polling;
 using Telegram.Bot.Types;
+using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types.ReplyMarkups;
 using System.Net;
 using Newtonsoft.Json;
 
 namespace TelegramBot
 {
+
     class TelegramBot
     {
         public TelegramBot main { get; set; }
+        public string Name { get; set; }
         public float Temp { get; set; }
 
         static ITelegramBotClient bot = new TelegramBotClient("Token");
 
-        static string[] HelloArr = new[] {"Привет!", "привет", "Привет", "Ку", "ghbdtn", "ку", "дороу", "Дороу"};
-        static string[] WhatsUpArr = new[] {"Как дела?", "как дела?", "как дела"};
-        static string[] WeatherCity = new[] {"Владимир", "Москва", "Санкт-Петербург", "Головино"};
+        static string[] HelloArr = new string[] { "Привет!", "привет", "Привет", "Ку", "ghbdtn", "ку", "дороу", "Дороу" };
+        static string[] WhatsUpArr = new string[] { "Как дела?", "как дела?", "как дела" };
+        static string[] WeatherCity = new string[] { "Владимир", "Москва", "Санкт-Петербург", "Головино", "Боголюбово", "Дубай", "Гусь-Хрустальный" };
 
         static string nameofCity;
         static float tempOfCity;
-
         public static IReplyMarkup ButtonOnTGbot()
         {
+
             var TGbutton = new ReplyKeyboardMarkup(new[]
-            {
+                        {
                 new[]
                 {
                     new KeyboardButton("Привет!"),
@@ -39,94 +45,88 @@ namespace TelegramBot
                 },
                 new[]
                 {
-                    new KeyboardButton("Погода"),
+                    new KeyboardButton("Посмотреть погоду\U0001F325"),
                 }
             });
             TGbutton.ResizeKeyboard = true;
             return TGbutton;
         }
 
-        private static async Task UpdateHandler(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+        public static async Task updateHandler(ITelegramBotClient bot, Update update, CancellationToken cancellationToken)
         {
             if (update.Type == Telegram.Bot.Types.Enums.UpdateType.Message)
             {
                 var message = update.Message;
 
-                Console.WriteLine($"Пользователь {message.From.FirstName} {message.From.LastName} написал боту данное сообщение: {message.Text}");
-                Console.WriteLine($"\tid Пользователя: {message.From.Id}");
+                Console.WriteLine("Пользователь " + message.From.FirstName + " " + message.From.LastName + " написал боту данное сообщение: " + message.Text);
+                Console.WriteLine("\tid Пользователя: " + message.From.Id);
 
                 var hashHelloArr = new HashSet<string>(HelloArr);
                 var hashWhatsUpArr = new HashSet<string>(WhatsUpArr);
                 var hashWeatherCity = new HashSet<string>(WeatherCity);
 
-                await using StreamWriter dataBase = new StreamWriter("E:\\DataBase.txt", true);
-                await dataBase.WriteLineAsync(JsonConvert.SerializeObject(update));
-                dataBase.Close();
+                StreamWriter DataBase = new StreamWriter("E:\\DataBase.txt", true);
+                DataBase.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(update));
+                DataBase.Close();
 
 
                 if (hashHelloArr.Contains(message.Text))
                 {
-                    await botClient.SendTextMessageAsync(message.Chat.Id, $"Привет {message.From.FirstName}! 🙂");
+                    await bot.SendTextMessageAsync(message.Chat.Id, "Привет " + message.From.FirstName + "! \U0001F642");
                     return;
                 }
-
-                if (string.Equals(message.Text, "/start", StringComparison.OrdinalIgnoreCase))
+                else if (message.Text == "/start")
                 {
-                    await bot.SendTextMessageAsync(message.Chat.Id, "Смотри что я умею! :)", replyMarkup: ButtonOnTGbot(), cancellationToken: cancellationToken);
+                    TelegramBot.bot.SendTextMessageAsync(message.Chat.Id, "Смотри что я умею! :)", replyMarkup: ButtonOnTGbot());
                     return;
                 }
-
-                if (hashWhatsUpArr.Contains(message.Text))
+                else if (hashWhatsUpArr.Contains(message.Text))
                 {
-                    await botClient.SendTextMessageAsync(message.Chat.Id, "Хорошо, у тебя как?", cancellationToken: cancellationToken);
+                    await bot.SendTextMessageAsync(message.Chat.Id, "Хорошо, у тебя как?");
                     return;
                 }
-
-                if (string.Equals(message.Text, "/getimage", StringComparison.OrdinalIgnoreCase)
-                    || string.Equals(message.Text, "Скинь картинку", StringComparison.OrdinalIgnoreCase))
+                else if (message.Text == "/getimage" || message.Text == "Скинь картинку")
                 {
-                    await bot.SendPhotoAsync(message.Chat.Id, "https://avatarko.ru/img/kartinka/33/Star_Wars_Darth_Vader_32632.jpg", "Смотри, это Дарт Вейдер!", cancellationToken: cancellationToken);
+                    await TelegramBot.bot.SendPhotoAsync(message.Chat.Id, "https://www.animationsource.org/sites_content/lion_king/img_screenshot/85441.jpg", "\U0001F605");
                     return;
                 }
-
-                if (string.Equals(message.Text, "Погода", StringComparison.InvariantCulture))
+                else if (message.Text == "Посмотреть погоду\U0001F325")
                 {
-                    await bot.SendTextMessageAsync(message.Chat.Id, "Для того, чтобы бот показал погоду, напишите название города!\nДля того чтобы узнать какие города доступны, нажмите на это: /cityWeather", cancellationToken: cancellationToken);
+                    await TelegramBot.bot.SendTextMessageAsync(message.Chat.Id, "Для того, чтобы бот показал погоду, напишите название города!\nДля того чтобы узнать какие города доступны, нажмите на это: /cityWeather");
                     return;
                 }
-
-                if (message.Text == "/cityWeather")
+                else if (message.Text == "/cityWeather")
                 {
-                    foreach (var t in WeatherCity)
-                        await bot.SendTextMessageAsync(message.Chat.Id, $"{t}\n", cancellationToken: cancellationToken);
-
+                    for (int i = 0; i < WeatherCity.Length; i++)
+                    {
+                        await TelegramBot.bot.SendTextMessageAsync(message.Chat.Id, WeatherCity[i] + "\n");
+                    }
                     return;
                 }
-                
-                if (hashWeatherCity.Contains(message.Text))
+                else if (hashWeatherCity.Contains(message.Text))
                 {
                     nameofCity = message.Text;
                     Weather(nameofCity);
-                    await bot.SendTextMessageAsync(message.Chat.Id, $" \n\nТемпература в {nameofCity}: {Math.Round(tempOfCity)} °C", cancellationToken: cancellationToken);
+                    await TelegramBot.bot.SendTextMessageAsync(message.Chat.Id, $"Температура в {nameofCity}: {Math.Round(tempOfCity)} °C");
                     return;
                 }
 
-                await botClient.SendTextMessageAsync(message.Chat.Id, "Я не знаю как ответить на это \U0001F914", cancellationToken: cancellationToken);
+                await bot.SendTextMessageAsync(message.Chat.Id, "Я не знаю как ответить на это \U0001F914");
             }
         }
 
-        private static async Task errorHandler(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
+        public static async Task errorHandler(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
         {
-            Console.WriteLine(JsonConvert.SerializeObject(exception));
+            Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(exception));
         }
 
-        private static void Weather(string cityName)
+        public static void Weather(string cityName)
         {
             try
             {
                 string url = "https://api.openweathermap.org/data/2.5/weather?q=" + cityName + "&appid=2351aaee5394613fc0d14424239de2bd";
-                HttpWebRequest httpWebRequest = (HttpWebRequest) WebRequest.Create(url);
-                HttpWebResponse httpWebResponse = (HttpWebResponse) httpWebRequest?.GetResponse();
+                HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+                HttpWebResponse httpWebResponse = (HttpWebResponse)httpWebRequest?.GetResponse();
                 string response;
 
                 using (StreamReader streamReader = new StreamReader(httpWebResponse.GetResponseStream()))
@@ -151,7 +151,7 @@ namespace TelegramBot
             var cts = new CancellationTokenSource();
             var cancellationToken = cts.Token;
             var receiverOptions = new ReceiverOptions { };
-            bot.StartReceiving(UpdateHandler, errorHandler, receiverOptions, cancellationToken);
+            bot.StartReceiving(updateHandler, errorHandler, receiverOptions, cancellationToken);
             Console.ReadLine();
         }
     }
