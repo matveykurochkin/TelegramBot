@@ -22,7 +22,7 @@ namespace TelegramBot
 
         static string[] HelloArr = new string[] { "Привет!", "привет", "Привет", "Ку", "ghbdtn", "ку", "дороу", "Дороу" };
         static string[] WhatsUpArr = new string[] { "Как дела?", "как дела?", "как дела" };
-        static string[] WeatherCity = new string[] { "Владимир", "Москва", "Санкт-Петербург", "Головино" };
+        static string[] WeatherCity = new string[] { "Владимир", "Москва", "Санкт-Петербург", "Головино", "Боголюбово", "Дубай", "Гусь-Хрустальный" };
 
         static string nameofCity;
         static float tempOfCity;
@@ -45,14 +45,14 @@ namespace TelegramBot
                 },
                 new[]
                 {
-                    new KeyboardButton("Погода"),
+                    new KeyboardButton("Посмотреть погоду\U0001F325"),
                 }
             });
             TGbutton.ResizeKeyboard = true;
             return TGbutton;
         }
 
-        public static async Task updateHandler(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+        public static async Task updateHandler(ITelegramBotClient bot, Update update, CancellationToken cancellationToken)
         {
             if (update.Type == Telegram.Bot.Types.Enums.UpdateType.Message)
             {
@@ -72,34 +72,34 @@ namespace TelegramBot
 
                 if (hashHelloArr.Contains(message.Text))
                 {
-                    await botClient.SendTextMessageAsync(message.Chat.Id, "Привет " + message.From.FirstName + "! \U0001F642");
+                    await bot.SendTextMessageAsync(message.Chat.Id, "Привет " + message.From.FirstName + "! \U0001F642");
                     return;
                 }
                 else if (message.Text == "/start")
                 {
-                    bot.SendTextMessageAsync(message.Chat.Id, "Смотри что я умею! :)", replyMarkup: ButtonOnTGbot());
+                    TelegramBot.bot.SendTextMessageAsync(message.Chat.Id, "Смотри что я умею! :)", replyMarkup: ButtonOnTGbot());
                     return;
                 }
                 else if (hashWhatsUpArr.Contains(message.Text))
                 {
-                    await botClient.SendTextMessageAsync(message.Chat.Id, "Хорошо, у тебя как?");
+                    await bot.SendTextMessageAsync(message.Chat.Id, "Хорошо, у тебя как?");
                     return;
                 }
                 else if (message.Text == "/getimage" || message.Text == "Скинь картинку")
                 {
-                    await bot.SendPhotoAsync(message.Chat.Id, "https://avatarko.ru/img/kartinka/33/Star_Wars_Darth_Vader_32632.jpg", "Смотри, это Дарт Вейдер!");
+                    await TelegramBot.bot.SendPhotoAsync(message.Chat.Id, "https://www.animationsource.org/sites_content/lion_king/img_screenshot/85441.jpg", "\U0001F605");
                     return;
                 }
-                else if (message.Text == "Погода")
+                else if (message.Text == "Посмотреть погоду\U0001F325")
                 {
-                    await bot.SendTextMessageAsync(message.Chat.Id, "Для того, чтобы бот показал погоду, напишите название города!\nДля того чтобы узнать какие города доступны, нажмите на это: /cityWeather");
+                    await TelegramBot.bot.SendTextMessageAsync(message.Chat.Id, "Для того, чтобы бот показал погоду, напишите название города!\nДля того чтобы узнать какие города доступны, нажмите на это: /cityWeather");
                     return;
                 }
                 else if (message.Text == "/cityWeather")
                 {
                     for (int i = 0; i < WeatherCity.Length; i++)
                     {
-                        await bot.SendTextMessageAsync(message.Chat.Id, WeatherCity[i] + "\n");
+                        await TelegramBot.bot.SendTextMessageAsync(message.Chat.Id, WeatherCity[i] + "\n");
                     }
                     return;
                 }
@@ -107,11 +107,11 @@ namespace TelegramBot
                 {
                     nameofCity = message.Text;
                     Weather(nameofCity);
-                    await bot.SendTextMessageAsync(message.Chat.Id, $" \n\nТемпература в {nameofCity}: {Math.Round(tempOfCity)} °C");
+                    await TelegramBot.bot.SendTextMessageAsync(message.Chat.Id, $"Температура в {nameofCity}: {Math.Round(tempOfCity)} °C");
                     return;
                 }
 
-                await botClient.SendTextMessageAsync(message.Chat.Id, "Я не знаю как ответить на это \U0001F914");
+                await bot.SendTextMessageAsync(message.Chat.Id, "Я не знаю как ответить на это \U0001F914");
             }
         }
 
