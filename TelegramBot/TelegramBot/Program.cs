@@ -7,7 +7,6 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types.ReplyMarkups;
 
-
 namespace TelegramBot
 {
     class TelegramBot
@@ -19,11 +18,15 @@ namespace TelegramBot
 
         public static IReplyMarkup ButtonOnTGbot()
         {
-            return new ReplyKeyboardMarkup(new[]
+
+            var TGbutton = new ReplyKeyboardMarkup(new[]
                         {
                 new[]
                 {
                     new KeyboardButton("Привет!"),
+                },
+                new[]
+                {
                     new KeyboardButton("Как дела?")
                 },
                 new[]
@@ -31,6 +34,8 @@ namespace TelegramBot
                     new KeyboardButton("Скинь картинку"),
                 }
             });
+            TGbutton.ResizeKeyboard = true;
+            return TGbutton;
         }
 
         public static async Task updateHandler(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
@@ -39,8 +44,8 @@ namespace TelegramBot
             if (update.Type == Telegram.Bot.Types.Enums.UpdateType.Message)
             {
                 var message = update.Message;
-                Console.WriteLine("Пользователь "+ message.From.FirstName +" "+ message.From.LastName +" написал боту данное сообщение: " + message.Text);
-                Console.WriteLine("\tid Пользователя "+message.From.Id);
+                Console.WriteLine("Пользователь " + message.From.FirstName + " " + message.From.LastName + " написал боту данное сообщение: " + message.Text);
+                Console.WriteLine("\tid Пользователя: " + message.From.Id);
                 var hashHelloArr = new HashSet<string>(HelloArr);
                 var hashWhatsUpArr = new HashSet<string>(WhatsUpArr);
 
@@ -48,7 +53,7 @@ namespace TelegramBot
                 DataBase.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(update));
                 DataBase.Close();
 
-              //  bot.SendTextMessageAsync(message.Chat, "", replyMarkup: ButtonOnTGbot());
+                //  bot.SendTextMessageAsync(message.Chat, "", replyMarkup: ButtonOnTGbot());
 
                 if (hashHelloArr.Contains(message.Text))
                 {
@@ -65,7 +70,7 @@ namespace TelegramBot
                     await botClient.SendTextMessageAsync(message.Chat.Id, "Хорошо, у тебя как?");
                     return;
                 }
-                else if (message.Text == "/getimage"|| message.Text == "Скинь картинку")
+                else if (message.Text == "/getimage" || message.Text == "Скинь картинку")
                 {
                     await bot.SendPhotoAsync(message.Chat.Id, "https://avatarko.ru/img/kartinka/33/Star_Wars_Darth_Vader_32632.jpg", "Смотри, это Дарт Вейдер!");
                     return;
