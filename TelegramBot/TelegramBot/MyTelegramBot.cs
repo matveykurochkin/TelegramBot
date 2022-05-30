@@ -11,18 +11,20 @@ class MyTelegramBot
 {
     private readonly ITelegramBotClient _telegramBotClient;
 
-    private string? _nameofCity;
+    private string? _nameofCity, Cloud;
+    private int _clouds;
     private double _tempOfCity;
+    private int _sunRise, _sunSet;
+    DateTime _sunRiseDate, _sunSetDate;
 
     public MyTelegramBot(ITelegramBotClient telegramBotClient)
     {
         _telegramBotClient = telegramBotClient;
     }
 
-    string[] HelloArr = {"Привет!", "привет", "Привет", "Ку", "ghbdtn", "ку", "дороу", "Дороу"};
-    string[] WhatsUpArr = {"Как дела?", "как дела?", "как дела"};
-    string[] WeatherCity = {"Владимир", "Москва", "Санкт-Петербург", "Головино", "Боголюбово", "Дубай", "Гусь-Хрустальный"};
-
+    string[] HelloArr = { "Привет!", "привет", "Привет", "Ку", "ghbdtn", "ку", "дороу", "Дороу" };
+    string[] WhatsUpArr = { "Как дела?", "как дела?", "как дела" };
+    string[] WeatherCity = { "Владимир", "Москва", "Санкт-Петербург", "Головино", "Боголюбово", "Дубай", "Гусь-Хрустальный", "Сочи", "Нью-Йорк" };
 
     public IReplyMarkup ButtonOnTGbot()
     {
@@ -48,6 +50,22 @@ class MyTelegramBot
         tgButton.ResizeKeyboard = true;
         return tgButton;
     }
+    /// <summary>
+    ///  Добавление кнопок, в ответах бота
+    /// </summary>
+    /// <returns></returns>
+    public IReplyMarkup ButtonOnChatTGbot(string City)
+    {
+        var tgButton = new InlineKeyboardMarkup(new[]
+        {
+        new []
+        {
+            InlineKeyboardButton.WithCallbackData(text: City, callbackData: $"{City}"),
+        }
+        });
+        return tgButton;
+    }
+
 
     internal async Task UpdateHandler(ITelegramBotClient bot, Update update, CancellationToken cancellationToken)
     {
@@ -93,7 +111,7 @@ class MyTelegramBot
 
             if (string.Equals(message?.Text, "Посмотреть погоду\U0001F325", StringComparison.OrdinalIgnoreCase))
             {
-                await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, "Для того, чтобы бот показал погоду, напишите название города!\nДля того чтобы узнать какие города доступны, нажмите на это: /cityWeather", cancellationToken: cancellationToken);
+                await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, "Для того, чтобы бот показал погоду, напишите название города!\nДля того, чтобы узнать какие города доступны, нажмите на это: /cityWeather", cancellationToken: cancellationToken);
                 return;
             }
 
@@ -102,8 +120,8 @@ class MyTelegramBot
                 foreach (var city in WeatherCity)
                 {
                     await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"{city}\n", cancellationToken: cancellationToken);
+                    //await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"{city}\n", replyMarkup: ButtonOnChatTGbot(city), cancellationToken: cancellationToken);
                 }
-
                 return;
             }
 
@@ -112,6 +130,14 @@ class MyTelegramBot
                 _nameofCity = message.Text;
                 await Weather(_nameofCity, cancellationToken);
                 await _telegramBotClient.SendTextMessageAsync(message.Chat.Id, $"Температура в {_nameofCity}: {Math.Round(_tempOfCity)} °C", cancellationToken: cancellationToken);
+                if (_clouds >= 0 && _clouds <= 5)
+                    Cloud = "Ясно";
+                else if (_clouds >= 6 && _clouds <= 40)
+                    Cloud = "Незначительная облачность";
+                else if (_clouds >= 41)
+                    Cloud = "Облачно";
+                await _telegramBotClient.SendTextMessageAsync(message.Chat.Id, $"Облачность в {_nameofCity}: {Cloud}", cancellationToken: cancellationToken);
+                await _telegramBotClient.SendTextMessageAsync(message.Chat.Id, $"Восход: {_sunRiseDate}\nЗакат: {_sunSetDate}", cancellationToken: cancellationToken);
                 return;
             }
 
@@ -128,15 +154,20 @@ class MyTelegramBot
     private async Task Weather(string cityName, CancellationToken cancellationToken)
     {
         const string appid = "2351aaee5394613fc0d14424239de2bd";
-
         try
         {
             var url = $"https://api.openweathermap.org/data/2.5/weather?q={HttpUtility.UrlEncode(cityName)}&appid={HttpUtility.UrlEncode(appid)}&units=metric";
             using var hc = new HttpClient();
             var weather = await hc.GetFromJsonAsync<WeatherResponse>(url, cancellationToken);
-            
             if (weather != null)
+            {
                 _tempOfCity = Math.Round(weather.main.temp);
+                _clouds = weather.clouds.all;
+                _sunRise = weather.sys.sunrise;
+                _sunRiseDate = new DateTime(1970, 1, 1).AddSeconds(_sunRise);
+                _sunSet = weather.sys.sunset;
+                _sunSetDate = new DateTime(1970, 1, 1).AddSeconds(_sunSet);
+            }
         }
         catch (Exception ex)
         {
