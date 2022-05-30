@@ -12,10 +12,11 @@ class MyTelegramBot
     private readonly ITelegramBotClient _telegramBotClient;
 
     private string? _nameofCity, Cloud;
-    private int _clouds;
+    private int _clouds, count;
     private double _tempOfCity;
     private int _sunRise, _sunSet;
     DateTime _sunRiseDate, _sunSetDate;
+    Random _random = new Random();
 
     public MyTelegramBot(ITelegramBotClient telegramBotClient)
     {
@@ -23,9 +24,15 @@ class MyTelegramBot
     }
 
     string[] HelloArr = { "Привет!", "привет", "Привет", "Ку", "ghbdtn", "ку", "дороу", "Дороу" };
+    string[] AnswHelloArr = { "Привет", "Дороу", "Здарвствуйте,", "Приветики", "Привет-привет" };
     string[] WhatsUpArr = { "Как дела?", "как дела?", "как дела" };
+    string[] AnswWhatsUpArr = { "Дела отлично, только уж очень по тебе соскучился", "Хорошо, приятно, что тебе интересно", "Отлично! Надеюсь, у тебя ещё лучше!",
+        "Дела нормально! Ждут, когда я за них возьмусь!" };
     string[] WeatherCity = { "Владимир", "Москва", "Санкт-Петербург", "Головино", "Боголюбово", "Дубай", "Гусь-Хрустальный", "Сочи", "Нью-Йорк" };
-
+    string[] WhatAreYouDoArr = { "Что делаешь?", "что делаешь?", "Что делаешь", "чд", "Чд", "Чем занимаешься?", "чем занимаешься?", "чем занимаешься" };
+    string[] AnswWhatAreYouDoArr = { "Учусь разговаривать 🙂, а ты?", "Думаю о тебе, конечно!\U0001F60D", "Планирую захватить мир!", "Болтаю с тараканами в голове!",
+        "Наслаждаюсь прекрасным днем!","Планирую ограбить какой-нибудь банк. Ты в деле?","Выполняю миссию не думать о тебе. Это называется: «Миссия невыполнима!» 🥰",
+        "Размахиваю мечем Джедая, так что осторожнее!","Мою мыло!","Учу кота разговаривать!","Разрабатываю план по захвату вселенной!"};
     public IReplyMarkup ButtonOnTGbot()
     {
         var tgButton = new ReplyKeyboardMarkup(new[]
@@ -37,6 +44,10 @@ class MyTelegramBot
             new[]
             {
                 new KeyboardButton("Как дела?")
+            },
+            new[]
+            {
+                new KeyboardButton("Чем занимаешься?")
             },
             new[]
             {
@@ -56,14 +67,14 @@ class MyTelegramBot
     /// <returns></returns>
     public IReplyMarkup ButtonOnChatTGbot(string City)
     {
-        var tgButton = new InlineKeyboardMarkup(new[]
+
+        return new InlineKeyboardMarkup(new[]
         {
         new []
         {
-            InlineKeyboardButton.WithCallbackData(text: City, callbackData: $"{City}"),
+            InlineKeyboardButton.WithCallbackData(text: City,$"{City}"),
         }
         });
-        return tgButton;
     }
 
 
@@ -79,6 +90,7 @@ class MyTelegramBot
             var hashHelloArr = new HashSet<string>(HelloArr);
             var hashWhatsUpArr = new HashSet<string>(WhatsUpArr);
             var hashWeatherCity = new HashSet<string>(WeatherCity);
+            var hashWhatAreYouDoArr = new HashSet<string>(WhatAreYouDoArr);
 
             await using var dataBase = new StreamWriter("E:\\DataBase.txt", true);
             await dataBase.WriteLineAsync(JsonConvert.SerializeObject(update));
@@ -86,19 +98,21 @@ class MyTelegramBot
 
             if (!string.IsNullOrEmpty(message?.Text) && hashHelloArr.Contains(message.Text))
             {
-                await bot.SendTextMessageAsync(message.Chat.Id, $"Привет {message.From?.FirstName}! 🙂", cancellationToken: cancellationToken);
+                count = _random.Next(AnswHelloArr.Length);
+                await _telegramBotClient.SendTextMessageAsync(message.Chat.Id, $"{AnswHelloArr[count]} {message.From?.FirstName}! 🙂", cancellationToken: cancellationToken);
                 return;
             }
 
             if (string.Equals(message?.Text, "/start", StringComparison.OrdinalIgnoreCase))
             {
-                await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, "Смотри что я умею! :)", replyMarkup: ButtonOnTGbot(), cancellationToken: cancellationToken);
+                await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, "Смотри что я умею! \U0001F600", replyMarkup: ButtonOnTGbot(), cancellationToken: cancellationToken);
                 return;
             }
 
             if (!string.IsNullOrEmpty(message?.Text) && hashWhatsUpArr.Contains(message.Text))
             {
-                await bot.SendTextMessageAsync(message.Chat.Id, "Хорошо, у тебя как?", cancellationToken: cancellationToken);
+                count = _random.Next(AnswWhatsUpArr.Length);
+                await _telegramBotClient.SendTextMessageAsync(message.Chat.Id, $"{AnswWhatsUpArr[count]}", cancellationToken: cancellationToken);
                 return;
             }
 
@@ -115,12 +129,19 @@ class MyTelegramBot
                 return;
             }
 
+            if (!string.IsNullOrEmpty(message?.Text) && hashWhatAreYouDoArr.Contains(message.Text))
+            {
+                count = _random.Next(AnswWhatAreYouDoArr.Length);
+                await _telegramBotClient.SendTextMessageAsync(message.Chat.Id, $"{AnswWhatAreYouDoArr[count]}", cancellationToken: cancellationToken);
+                return;
+            }
+
             if (string.Equals(message?.Text, "/cityWeather", StringComparison.OrdinalIgnoreCase))
             {
                 foreach (var city in WeatherCity)
                 {
                     await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"{city}\n", cancellationToken: cancellationToken);
-                    //await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"{city}\n", replyMarkup: ButtonOnChatTGbot(city), cancellationToken: cancellationToken);
+                    // await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"{city}\n", replyMarkup: ButtonOnChatTGbot(city), cancellationToken: cancellationToken);
                 }
                 return;
             }
@@ -134,8 +155,10 @@ class MyTelegramBot
                     Cloud = "Ясно";
                 else if (_clouds >= 6 && _clouds <= 40)
                     Cloud = "Незначительная облачность";
-                else if (_clouds >= 41)
+                else if (_clouds >= 41 && _clouds <= 60)
                     Cloud = "Облачно";
+                else if (_clouds >= 61)
+                    Cloud = "Значительная облачность";
                 await _telegramBotClient.SendTextMessageAsync(message.Chat.Id, $"Облачность в {_nameofCity}: {Cloud}", cancellationToken: cancellationToken);
                 await _telegramBotClient.SendTextMessageAsync(message.Chat.Id, $"Восход: {_sunRiseDate}\nЗакат: {_sunSetDate}", cancellationToken: cancellationToken);
                 return;

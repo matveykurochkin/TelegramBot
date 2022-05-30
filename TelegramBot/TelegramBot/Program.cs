@@ -7,7 +7,7 @@ static class Program
 {
     static void Main(string[] args)
     {
-        ITelegramBotClient bot = new TelegramBotClient("Token");
+        ITelegramBotClient bot = new TelegramBotClient("");
         var tgBot = new MyTelegramBot(bot);
 
         Console.WriteLine($"\tБот {bot.GetMeAsync().Result.FirstName} успешно запущен!");
