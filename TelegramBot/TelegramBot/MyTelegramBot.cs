@@ -12,11 +12,11 @@ class MyTelegramBot
     private readonly ITelegramBotClient _telegramBotClient;
 
     private string? _nameofCity, Cloud;
-    private int _clouds, count;
-    private double _tempOfCity;
-    private int _sunRise, _sunSet;
+    private int _clouds, count, _pressure;
+    private double _tempOfCity, _fellsLikeOfCity;
     DateTime _sunRiseDate, _sunSetDate;
     Random _random = new Random();
+    const string IgnoredText = "@MyTelegGBot";
 
     public MyTelegramBot(ITelegramBotClient telegramBotClient)
     {
@@ -72,8 +72,6 @@ class MyTelegramBot
         }
         });
     }
-
-
     internal async Task UpdateHandler(ITelegramBotClient bot, Update update, CancellationToken cancellationToken)
     {
         if (update.Type == Telegram.Bot.Types.Enums.UpdateType.Message)
@@ -142,14 +140,13 @@ class MyTelegramBot
                 return;
             }
 
-            if (message.Text.StartsWith("@MyTelegGBot"))
-                message.Text = message.Text.Remove(0,13);
+            if (!string.IsNullOrEmpty(message?.Text) && message.Text.StartsWith(IgnoredText))
+                message.Text = message.Text.Remove(0, 13);
 
-            if (!string.IsNullOrEmpty(message?.Text) &&  hashWeatherCity.Contains(message.Text))
+            if (!string.IsNullOrEmpty(message?.Text) && hashWeatherCity.Contains(message.Text))
             {
                 _nameofCity = message.Text;
                 await Weather(_nameofCity, cancellationToken);
-                await _telegramBotClient.SendTextMessageAsync(message.Chat.Id, $"Температура в {_nameofCity}: {Math.Round(_tempOfCity)} °C", cancellationToken: cancellationToken);
                 if (_clouds >= 0 && _clouds <= 5)
                     Cloud = "Ясно";
                 else if (_clouds >= 6 && _clouds <= 40)
@@ -158,8 +155,9 @@ class MyTelegramBot
                     Cloud = "Облачно";
                 else if (_clouds >= 61)
                     Cloud = "Значительная облачность";
-                await _telegramBotClient.SendTextMessageAsync(message.Chat.Id, $"Облачность в {_nameofCity}: {Cloud}", cancellationToken: cancellationToken);
-                await _telegramBotClient.SendTextMessageAsync(message.Chat.Id, $"Восход: {_sunRiseDate}\nЗакат: {_sunSetDate}", cancellationToken: cancellationToken);
+                await _telegramBotClient.SendTextMessageAsync(message.Chat.Id, $"Температура в {_nameofCity}: {_tempOfCity} °C\nОщущается как { _fellsLikeOfCity} °C\n" +
+                    $"Атмосферное давление: {Math.Round(_pressure * 0.75)} мм рт.ст.\nОблачность в {_nameofCity}: {Cloud}\n" +
+                    $"Восход: {_sunRiseDate}\nЗакат: {_sunSetDate}" , cancellationToken: cancellationToken);
                 return;
             }
 
@@ -184,11 +182,11 @@ class MyTelegramBot
             if (weather != null)
             {
                 _tempOfCity = Math.Round(weather.main.temp);
+                _fellsLikeOfCity = Math.Round(weather.main.feels_like);
+                _pressure = weather.main.pressure;
                 _clouds = weather.clouds.all;
-                _sunRise = weather.sys.sunrise;
-                _sunRiseDate = new DateTime(1970, 1, 1).AddSeconds(_sunRise);
-                _sunSet = weather.sys.sunset;
-                _sunSetDate = new DateTime(1970, 1, 1).AddSeconds(_sunSet);
+                _sunRiseDate = DateTime.SpecifyKind(new DateTime(1970, 1, 1).AddSeconds(weather.sys.sunrise), DateTimeKind.Utc).ToLocalTime();
+                _sunSetDate = DateTime.SpecifyKind(new DateTime(1970, 1, 1).AddSeconds(weather.sys.sunset), DateTimeKind.Utc).ToLocalTime();
             }
         }
         catch (Exception ex)
