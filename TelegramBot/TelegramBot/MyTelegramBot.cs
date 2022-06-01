@@ -23,16 +23,14 @@ class MyTelegramBot
         _telegramBotClient = telegramBotClient;
     }
 
-    string[] HelloArr = { "Привет!", "привет", "Привет", "Ку", "ghbdtn", "ку", "дороу", "Дороу" };
-    string[] AnswHelloArr = { "Привет,", "Дороу,", "Здравствуйте,", "Приветики,", "Привет-привет," };
-    string[] WhatsUpArr = { "Как дела?", "как дела?", "как дела" };
-    string[] AnswWhatsUpArr = { "Дела отлично, только уж очень по тебе соскучился", "Хорошо, приятно, что тебе интересно", "Отлично! Надеюсь, у тебя ещё лучше!",
-        "Дела нормально! Ждут, когда я за них возьмусь!" };
-    string[] WeatherCity = { "Владимир", "Москва", "Санкт-Петербург", "Головино", "Боголюбово", "Дубай", "Гусь-Хрустальный", "Сочи", "Нью-Йорк" };
-    string[] WhatAreYouDoArr = { "Что делаешь?", "что делаешь?", "Что делаешь", "чд", "Чд", "Чем занимаешься?", "чем занимаешься?", "чем занимаешься" };
-    string[] AnswWhatAreYouDoArr = { "Учусь разговаривать 🙂, а ты?", "Думаю о тебе, конечно!\U0001F60D", "Планирую захватить мир!", "Болтаю с тараканами в голове!",
-        "Наслаждаюсь прекрасным днем!","Планирую ограбить какой-нибудь банк. Ты в деле?","Выполняю миссию не думать о тебе. Это называется: «Миссия невыполнима!» 🥰",
-        "Размахиваю мечем Джедая, так что осторожнее!","Мою мыло!","Учу кота разговаривать!","Разрабатываю план по захвату вселенной!"};
+    string[] HelloArr = ArrDataClass.HelloArr;
+    string[] AnswHelloArr = ArrDataClass.AnswHelloArr;
+    string[] WhatsUpArr = ArrDataClass.WhatsUpArr;
+    string[] AnswWhatsUpArr = ArrDataClass.AnswWhatsUpArr;
+    string[] WeatherCity = ArrDataClass.WeatherCity;
+    string[] WhatAreYouDoArr = ArrDataClass.WhatAreYouDoArr;
+    string[] AnswWhatAreYouDoArr = ArrDataClass.AnswWhatAreYouDoArr;
+    string[] PicArr = ArrDataClass.PicArr;
     public IReplyMarkup ButtonOnTGbot()
     {
         var tgButton = new ReplyKeyboardMarkup(new[]
@@ -114,7 +112,8 @@ class MyTelegramBot
             if (string.Equals(message?.Text, "/getimage", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(message?.Text, "Скинь картинку", StringComparison.OrdinalIgnoreCase))
             {
-                await _telegramBotClient.SendPhotoAsync(message?.Chat.Id ?? 0, "https://www.animationsource.org/sites_content/lion_king/img_screenshot/85441.jpg", "\U0001F605", cancellationToken: cancellationToken);
+                count = _random.Next(PicArr.Length);
+                await _telegramBotClient.SendPhotoAsync(message?.Chat.Id ?? 0, $"{PicArr[count]}", "\U0001F605", cancellationToken: cancellationToken);
                 return;
             }
 
@@ -157,7 +156,7 @@ class MyTelegramBot
                     Cloud = "Значительная облачность";
                 await _telegramBotClient.SendTextMessageAsync(message.Chat.Id, $"Температура в {_nameofCity}: {_tempOfCity} °C\nОщущается как { _fellsLikeOfCity} °C\n" +
                     $"Атмосферное давление: {Math.Round(_pressure * 0.75)} мм рт.ст.\nОблачность в {_nameofCity}: {Cloud}\n" +
-                    $"Восход: {_sunRiseDate}\nЗакат: {_sunSetDate}" , cancellationToken: cancellationToken);
+                    $"Восход: {_sunRiseDate}\nЗакат: {_sunSetDate}", cancellationToken: cancellationToken);
                 return;
             }
 
