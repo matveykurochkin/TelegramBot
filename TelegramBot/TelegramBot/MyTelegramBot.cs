@@ -12,8 +12,8 @@ class MyTelegramBot
     private readonly ITelegramBotClient _telegramBotClient;
 
     private string? _nameofCity, Cloud;
-    private int _clouds, count, _pressure;
-    private double _tempOfCity, _fellsLikeOfCity;
+    private int _clouds, count, _pressure, _humidity;
+    private double _tempOfCity, _fellsLikeOfCity, _speed;
     DateTime _sunRiseDate, _sunSetDate;
     Random _random = new Random();
     const string IgnoredText = "@MyTelegGBot";
@@ -31,29 +31,19 @@ class MyTelegramBot
     string[] WhatAreYouDoArr = ArrDataClass.WhatAreYouDoArr;
     string[] AnswWhatAreYouDoArr = ArrDataClass.AnswWhatAreYouDoArr;
     string[] PicArr = ArrDataClass.PicArr;
+    string[] CommandArr = ArrDataClass.CommandArr;
     public IReplyMarkup ButtonOnTGbot()
     {
         var tgButton = new ReplyKeyboardMarkup(new[]
         {
             new[]
             {
-                new KeyboardButton("Привет!"),
+                new KeyboardButton("Скинуть пикчу🗿"),
+                new KeyboardButton("Посмотреть погоду⛅"),
             },
             new[]
             {
-                new KeyboardButton("Как дела?")
-            },
-            new[]
-            {
-                new KeyboardButton("Чем занимаешься?")
-            },
-            new[]
-            {
-                new KeyboardButton("Скинь картинку"),
-            },
-            new[]
-            {
-                new KeyboardButton("Посмотреть погоду\U0001F325"),
+                new KeyboardButton("Список доступных команд"),
             }
         });
         tgButton.ResizeKeyboard = true;
@@ -95,6 +85,13 @@ class MyTelegramBot
                 return;
             }
 
+            if (string.Equals(message?.Text, "/command", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(message?.Text, "Список доступных команд", StringComparison.OrdinalIgnoreCase))
+            {
+                await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"{CommandArr[0]}", cancellationToken: cancellationToken);
+                return;
+            }
+
             if (string.Equals(message?.Text, "/start", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(message?.Text, "Старт", StringComparison.OrdinalIgnoreCase))
             {
@@ -110,14 +107,14 @@ class MyTelegramBot
             }
 
             if (string.Equals(message?.Text, "/getimage", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(message?.Text, "Скинь картинку", StringComparison.OrdinalIgnoreCase))
+                || string.Equals(message?.Text, "Скинуть пикчу🗿", StringComparison.OrdinalIgnoreCase))
             {
                 count = _random.Next(PicArr.Length);
                 await _telegramBotClient.SendPhotoAsync(message?.Chat.Id ?? 0, $"{PicArr[count]}", "\U0001F605", cancellationToken: cancellationToken);
                 return;
             }
 
-            if (string.Equals(message?.Text, "Посмотреть погоду\U0001F325", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(message?.Text, "Посмотреть погоду⛅", StringComparison.OrdinalIgnoreCase))
             {
                 await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, "Для того, чтобы бот показал погоду, напишите название города!\nДля того, чтобы узнать какие города доступны, нажмите на это: /cityWeather", cancellationToken: cancellationToken);
                 return;
@@ -147,20 +144,19 @@ class MyTelegramBot
                 _nameofCity = message.Text;
                 await Weather(_nameofCity, cancellationToken);
                 if (_clouds >= 0 && _clouds <= 5)
-                    Cloud = "Ясно";
+                    Cloud = "☀";
                 else if (_clouds >= 6 && _clouds <= 40)
-                    Cloud = "Незначительная облачность";
-                else if (_clouds >= 41 && _clouds <= 60)
-                    Cloud = "Облачно";
-                else if (_clouds >= 61)
-                    Cloud = "Значительная облачность";
-                await _telegramBotClient.SendTextMessageAsync(message.Chat.Id, $"Температура в {_nameofCity}: {_tempOfCity} °C\nОщущается как { _fellsLikeOfCity} °C\n" +
-                    $"Атмосферное давление: {Math.Round(_pressure * 0.75)} мм рт.ст.\nОблачность в {_nameofCity}: {Cloud}\n" +
+                    Cloud = "⛅";
+                else if (_clouds >= 41 && _clouds <= 100)
+                    Cloud = "☁";
+                await _telegramBotClient.SendTextMessageAsync(message.Chat.Id, $"Температура в {_nameofCity}: {_tempOfCity} °C {Cloud}\nОщущается как { _fellsLikeOfCity} °C\n" +
+                    $"Влажность воздуха: {_humidity}%\nСкорость ветра: {_speed} м/с\n" +
+                    $"Атмосферное давление: {Math.Round(_pressure * 0.75)} мм рт.ст.\n" +
                     $"Восход: {_sunRiseDate}\nЗакат: {_sunSetDate}", cancellationToken: cancellationToken);
                 return;
             }
 
-            await bot.SendTextMessageAsync(message?.Chat?.Id ?? 0, "Я не знаю как ответить на это \U0001F914", cancellationToken: cancellationToken);
+            await _telegramBotClient.SendTextMessageAsync(message?.Chat?.Id ?? 0, "Я не знаю как ответить на это \U0001F914", cancellationToken: cancellationToken);
         }
     }
 
@@ -181,9 +177,11 @@ class MyTelegramBot
             if (weather != null)
             {
                 _tempOfCity = Math.Round(weather.main.temp);
-                _fellsLikeOfCity = Math.Round(weather.main.feels_like);
+                _fellsLikeOfCity = Math.Truncate(weather.main.feels_like);
+                _humidity = weather.main.humidity;
                 _pressure = weather.main.pressure;
                 _clouds = weather.clouds.all;
+                _speed = weather.wind.speed;
                 _sunRiseDate = DateTime.SpecifyKind(new DateTime(1970, 1, 1).AddSeconds(weather.sys.sunrise), DateTimeKind.Utc).ToLocalTime();
                 _sunSetDate = DateTime.SpecifyKind(new DateTime(1970, 1, 1).AddSeconds(weather.sys.sunset), DateTimeKind.Utc).ToLocalTime();
             }
