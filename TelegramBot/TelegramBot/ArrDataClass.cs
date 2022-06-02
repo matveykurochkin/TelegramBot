@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TelegramBot
+﻿namespace TelegramBot
 {
     public class ArrDataClass
     {
@@ -24,6 +18,9 @@ namespace TelegramBot
         public static string[] AnswWhatAreYouDoArr = { "Учусь разговаривать 🙂, а ты?", "Думаю о тебе, конечно!\U0001F60D", "Планирую захватить мир!", "Болтаю с тараканами в голове!",
         "Наслаждаюсь прекрасным днем!","Планирую ограбить какой-нибудь банк. Ты в деле?","Выполняю миссию не думать о тебе. Это называется: «Миссия невыполнима!» 🥰",
         "Размахиваю мечем Джедая, так что осторожнее!","Мою мыло!","Учу кота разговаривать!","Разрабатываю план по захвату вселенной!"};
+
+        public static string[] CommandArr = { "1⃣ /command - команда для просмотра доступных комманд\n\n2⃣ /getimage - попросить бота скинуть картинку\n\n" +
+                "3⃣ /start - начать общение с ботом заного (возможно добавит обновление для кнопок)\n\n4⃣ /cityWeather - бот покаже доступные города для просмотра погоды"};
 
         public static string[] PicArr = { "https://www.animationsource.org/sites_content/lion_king/img_screenshot/85441.jpg", "https://i.playground.ru/p/edomFkDNVvHrgUeiC-kAkw.png",
         "https://nationmagazine.ru/upload/iblock/98f/98fff66db88ff3b85b8b3f3692fb34cc.jpg","https://c.wallhere.com/photos/71/14/1600x1200_px_53_cat_funny_grumpy_humor_meme_quote-1627963.jpg!d" };
