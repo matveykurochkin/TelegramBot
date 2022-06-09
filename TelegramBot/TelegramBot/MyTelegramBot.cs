@@ -38,6 +38,12 @@ class MyTelegramBot
         {
             new[]
             {
+                new KeyboardButton("Привет!"),
+                new KeyboardButton("Как дела?"),
+                new KeyboardButton("Чд?"),
+            },
+            new[]
+            {
                 new KeyboardButton("Скинуть пикчу🗿"),
                 new KeyboardButton("Посмотреть погоду⛅"),
             },
@@ -147,8 +153,10 @@ class MyTelegramBot
                     Cloud = "☀";
                 else if (_clouds >= 6 && _clouds <= 40)
                     Cloud = "⛅";
-                else if (_clouds >= 41 && _clouds <= 100)
+                else if (_clouds >= 41 && _clouds <= 80)
                     Cloud = "☁";
+                else if (_clouds >= 81 && _clouds <= 120)
+                    Cloud = "🌧";
                 await _telegramBotClient.SendTextMessageAsync(message.Chat.Id, $"Температура в {_nameofCity}: {_tempOfCity} °C {Cloud}\nОщущается как { _fellsLikeOfCity} °C\n" +
                     $"Влажность воздуха: {_humidity}%\nСкорость ветра: {_speed} м/с\n" +
                     $"Атмосферное давление: {Math.Round(_pressure * 0.75)} мм рт.ст.\n" +
