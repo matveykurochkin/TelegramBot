@@ -34,6 +34,8 @@ class MyTelegramBot
     string[] PicArr = ArrDataClass.PicArr;
     string[] CommandArr = ArrDataClass.CommandArr;
     string[] AnswSearchArr = ArrDataClass.AnswSearchArr;
+    string[] AnswOther = ArrDataClass.AnswOther;
+    string[] SticerArr = ArrDataClass.SticerArr;
     public IReplyMarkup ButtonOnTGbot()
     {
         var tgButton = new ReplyKeyboardMarkup(new[]
@@ -47,11 +49,12 @@ class MyTelegramBot
             new[]
             {
                 new KeyboardButton("Скинуть пикчу🗿"),
-                new KeyboardButton("Посмотреть погоду⛅"),
+                new KeyboardButton("Скинуть стикос😉"),
             },
             new[]
             {
-                new KeyboardButton("Список доступных команд"),
+                new KeyboardButton("Посмотреть погоду⛅"),
+                new KeyboardButton("Список команд"),
             },
             new[]
             {
@@ -133,9 +136,17 @@ class MyTelegramBot
             }
 
             if (string.Equals(message?.Text, "/command", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(message?.Text, "Список доступных команд", StringComparison.OrdinalIgnoreCase))
+                || string.Equals(message?.Text, "Список команд", StringComparison.OrdinalIgnoreCase))
             {
                 await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"{CommandArr[0]}", cancellationToken: cancellationToken);
+                return;
+            }
+
+            if (string.Equals(message?.Text, "/getSticer", StringComparison.OrdinalIgnoreCase) 
+                || string.Equals(message?.Text, "Скинуть стикос😉", StringComparison.OrdinalIgnoreCase))
+            {
+                count = _random.Next(SticerArr.Length);
+                await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"{SticerArr[count]}", cancellationToken: cancellationToken);
                 return;
             }
 
@@ -187,9 +198,9 @@ class MyTelegramBot
             {
                 _nameofCity = message.Text;
                 await Weather(_nameofCity, cancellationToken);
-                if (_clouds >= 0 && _clouds <= 5)
+                if (_clouds >= 0 && _clouds <= 14)
                     Cloud = "☀";
-                else if (_clouds >= 6 && _clouds <= 40)
+                else if (_clouds >= 15 && _clouds <= 40)
                     Cloud = "⛅";
                 else if (_clouds >= 41 && _clouds <= 80)
                     Cloud = "☁";
@@ -201,8 +212,8 @@ class MyTelegramBot
                     $"Восход: {_sunRiseDate}\nЗакат: {_sunSetDate}", cancellationToken: cancellationToken);
                 return;
             }
-
-            await _telegramBotClient.SendTextMessageAsync(message?.Chat?.Id ?? 0, "Я не знаю как ответить на это \U0001F914", cancellationToken: cancellationToken);
+            count = _random.Next(AnswOther.Length);
+            await _telegramBotClient.SendTextMessageAsync(message?.Chat?.Id ?? 0, $"{AnswOther[count]} {"\n\nХочешь я это загуглю? Нажми: /request и напиши заново!"}", cancellationToken: cancellationToken);
         }
     }
 
