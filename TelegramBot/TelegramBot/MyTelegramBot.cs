@@ -17,6 +17,7 @@ class MyTelegramBot
     DateTime _sunRiseDate, _sunSetDate;
     Random _random = new Random();
     const string IgnoredText = "@MyTelegGBot";
+    private bool isRequest = false;
 
     public MyTelegramBot(ITelegramBotClient telegramBotClient)
     {
@@ -32,6 +33,7 @@ class MyTelegramBot
     string[] AnswWhatAreYouDoArr = ArrDataClass.AnswWhatAreYouDoArr;
     string[] PicArr = ArrDataClass.PicArr;
     string[] CommandArr = ArrDataClass.CommandArr;
+    string[] AnswSearchArr = ArrDataClass.AnswSearchArr;
     public IReplyMarkup ButtonOnTGbot()
     {
         var tgButton = new ReplyKeyboardMarkup(new[]
@@ -50,6 +52,10 @@ class MyTelegramBot
             new[]
             {
                 new KeyboardButton("Список доступных команд"),
+            },
+            new[]
+            {
+                new KeyboardButton("Найти в интернете🔎"),
             }
         });
         tgButton.ResizeKeyboard = true;
@@ -57,12 +63,21 @@ class MyTelegramBot
     }
     public IReplyMarkup ButtonOnChatTGbot(string City)
     {
-
         return new InlineKeyboardMarkup(new[]
         {
         new []
         {
             InlineKeyboardButton.WithSwitchInlineQueryCurrentChat(text: City,$"{City}"),
+        }
+        });
+    }
+    public IReplyMarkup ButtonOnRequest()
+    {
+        return new InlineKeyboardMarkup(new[]
+        {
+        new []
+        {
+            InlineKeyboardButton.WithSwitchInlineQueryCurrentChat(text: "Отменить поиск","Отменить поиск"),
         }
         });
     }
@@ -83,6 +98,32 @@ class MyTelegramBot
             await using var dataBase = new StreamWriter("E:\\DataBase.txt", true);
             await dataBase.WriteLineAsync(JsonConvert.SerializeObject(update));
             dataBase.Close();
+
+            if (!string.IsNullOrEmpty(message?.Text) && message.Text.StartsWith(IgnoredText))
+                message.Text = message.Text.Remove(0, 13);
+
+            if (string.Equals(message?.Text, "/request", StringComparison.OrdinalIgnoreCase)
+                 || string.Equals(message?.Text, "Найти в интернете🔎", StringComparison.OrdinalIgnoreCase))
+            {
+                count = _random.Next(AnswSearchArr.Length);
+                await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"{AnswSearchArr[count]}", replyMarkup: ButtonOnRequest(), cancellationToken: cancellationToken);
+                isRequest = true;
+                return;
+            }
+
+            if (isRequest == true)
+            {
+                if (string.Equals(message?.Text, "Отменить поиск", StringComparison.OrdinalIgnoreCase))
+                {
+                    await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"Поиск отменен! Можно продолжать общение с ботом!", cancellationToken: cancellationToken);
+                    isRequest = false;
+                    return;
+                }
+                var url = $"https://www.google.ru/search?q={message?.Text?.Replace(" ", "+")}";
+                await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"{url}", cancellationToken: cancellationToken);
+                isRequest = false;
+                return;
+            }
 
             if (!string.IsNullOrEmpty(message?.Text) && hashHelloArr.Contains(message.Text))
             {
@@ -141,9 +182,6 @@ class MyTelegramBot
                 }
                 return;
             }
-
-            if (!string.IsNullOrEmpty(message?.Text) && message.Text.StartsWith(IgnoredText))
-                message.Text = message.Text.Remove(0, 13);
 
             if (!string.IsNullOrEmpty(message?.Text) && hashWeatherCity.Contains(message.Text))
             {
