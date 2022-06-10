@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using System.Web;
 using Newtonsoft.Json;
+using NLog;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -9,6 +10,8 @@ namespace TelegramBot;
 
 class MyTelegramBot
 {
+    private static readonly ILogger _logger = LogManager.GetCurrentClassLogger();
+
     private readonly ITelegramBotClient _telegramBotClient;
 
     private string? _nameofCity, Cloud;
@@ -86,21 +89,18 @@ class MyTelegramBot
     }
     internal async Task UpdateHandler(ITelegramBotClient bot, Update update, CancellationToken cancellationToken)
     {
+        _logger.Debug("Update received: {@update}", update);
         if (update.Type == Telegram.Bot.Types.Enums.UpdateType.Message)
         {
             var message = update.Message;
 
-            Console.WriteLine($"Пользователь {message?.From?.FirstName} {message?.From?.LastName} написал боту данное сообщение: {message?.Text}");
-            Console.WriteLine($"\tid Пользователя: {message?.From?.Id}");
+            _logger.Info($"Пользователь {message?.From?.FirstName} {message?.From?.LastName} написал боту данное сообщение: {message?.Text}");
+            _logger.Info($"id Пользователя: {message?.From?.Id}");
 
             var hashHelloArr = new HashSet<string>(HelloArr);
             var hashWhatsUpArr = new HashSet<string>(WhatsUpArr);
             var hashWeatherCity = new HashSet<string>(WeatherCity);
             var hashWhatAreYouDoArr = new HashSet<string>(WhatAreYouDoArr);
-
-            await using var dataBase = new StreamWriter("E:\\DataBase.txt", true);
-            await dataBase.WriteLineAsync(JsonConvert.SerializeObject(update));
-            dataBase.Close();
 
             if (!string.IsNullOrEmpty(message?.Text) && message.Text.StartsWith(IgnoredText))
                 message.Text = message.Text.Remove(0, 13);
@@ -142,9 +142,10 @@ class MyTelegramBot
                 return;
             }
 
-            if (string.Equals(message?.Text, "/getSticer", StringComparison.OrdinalIgnoreCase) 
+            if (string.Equals(message?.Text, "/getSticer", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(message?.Text, "Скинуть стикос😉", StringComparison.OrdinalIgnoreCase))
             {
+                _logger.Debug("Get sticker");
                 count = _random.Next(SticerArr.Length);
                 await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"{SticerArr[count]}", cancellationToken: cancellationToken);
                 return;
@@ -202,10 +203,8 @@ class MyTelegramBot
                     Cloud = "☀";
                 else if (_clouds >= 15 && _clouds <= 40)
                     Cloud = "⛅";
-                else if (_clouds >= 41 && _clouds <= 80)
+                else if (_clouds >= 41 && _clouds <= 120)
                     Cloud = "☁";
-                else if (_clouds >= 81 && _clouds <= 120)
-                    Cloud = "🌧";
                 await _telegramBotClient.SendTextMessageAsync(message.Chat.Id, $"Температура в {_nameofCity}: {_tempOfCity} °C {Cloud}\nОщущается как { _fellsLikeOfCity} °C\n" +
                     $"Влажность воздуха: {_humidity}%\nСкорость ветра: {_speed} м/с\n" +
                     $"Атмосферное давление: {Math.Round(_pressure * 0.75)} мм рт.ст.\n" +
@@ -213,18 +212,19 @@ class MyTelegramBot
                 return;
             }
             count = _random.Next(AnswOther.Length);
-            await _telegramBotClient.SendTextMessageAsync(message?.Chat?.Id ?? 0, $"{AnswOther[count]} {"\n\nХочешь я это загуглю? Нажми: /request и напиши заново!"}", cancellationToken: cancellationToken);
+            await _telegramBotClient.SendTextMessageAsync(message?.Chat?.Id ?? 0, $"{AnswOther[count]} {"\n\nХочешь я это загуглю? Нажми: /request и напиши слово заново или просто перешли сообщение!"}", cancellationToken: cancellationToken);
         }
     }
 
     internal Task ErrorHandler(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
     {
-        Console.WriteLine(JsonConvert.SerializeObject(exception));
+        _logger.Error(exception, "Error received in telegram bot");
         return Task.CompletedTask;
     }
 
     private async Task Weather(string cityName, CancellationToken cancellationToken)
     {
+        _logger.Debug("Try to get weather");
         const string appid = "2351aaee5394613fc0d14424239de2bd";
         try
         {
@@ -245,7 +245,7 @@ class MyTelegramBot
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Непредвиденная ошибка :(  {ex.Message}");
+            _logger.Error(ex, "Непредвиденная ошибка");
         }
     }
 }

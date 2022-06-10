@@ -1,18 +1,47 @@
-﻿using Telegram.Bot;
-using Telegram.Bot.Extensions.Polling;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using NLog;
+using NLog.Web;
+using TelegramBot.Configuration;
 
 namespace TelegramBot;
 
 static class Program
 {
-    static void Main(string[] args)
-    {
-        ITelegramBotClient bot = new TelegramBotClient("");
-        var tgBot = new MyTelegramBot(bot);
 
-        Console.WriteLine($"\tБот {bot.GetMeAsync().Result.FirstName} успешно запущен!");
-        var receiverOptions = new ReceiverOptions();
-        bot.StartReceiving(tgBot.UpdateHandler, tgBot.ErrorHandler, receiverOptions, CancellationToken.None);
-        Console.ReadLine();
+    static async Task Main(string[] args)
+    {
+        var logger = LogManager.GetCurrentClassLogger();
+        logger.Info("Starting bot");
+        try
+        {
+            using IHost host = Host.CreateDefaultBuilder(args)
+            .UseNLog()
+            .ConfigureServices((context, services)=>
+            {
+                services.AddOptions<TelegramOptions>()
+                .Bind(context.Configuration.GetSection("Telegram")).Validate(to => to.EsureValid(), "Configuration for telegram bot is invalid. Please specify token");
+            })
+            .UseWindowsService(options =>
+            {
+                 options.ServiceName = ".NET Telegram Bot test service";
+            })
+            .ConfigureServices(services =>
+            {
+                services.AddHostedService<BotHostedService>();
+            })
+            .Build();
+
+            await host.RunAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "Error while bot working");
+            logger.Info("Service stopped with error");
+        }
+        finally
+        {
+            LogManager.Shutdown();
+        }
     }
 }
