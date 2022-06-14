@@ -23,9 +23,6 @@ namespace TelegramBot
         {
             if (string.IsNullOrEmpty(_opts.Token))
                 throw new ArgumentNullException(nameof(_opts.Token), "Token must not be empty");
-
-            _logger.Info("Stoping telegram bot");
-
             _bot = new TelegramBotClient(_opts.Token);
             var tgBot = new MyTelegramBot(_bot);
             var user = await _bot.GetMeAsync();
@@ -38,6 +35,7 @@ namespace TelegramBot
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
+            _logger.Info("Stoping telegram bot");
             return Task.CompletedTask;
         }
     }

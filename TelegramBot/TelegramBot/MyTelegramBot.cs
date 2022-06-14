@@ -1,6 +1,5 @@
 using System.Net.Http.Json;
 using System.Web;
-using Newtonsoft.Json;
 using NLog;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -94,8 +93,7 @@ class MyTelegramBot
         {
             var message = update.Message;
 
-            _logger.Info($"Пользователь {message?.From?.FirstName} {message?.From?.LastName} написал боту данное сообщение: {message?.Text}");
-            _logger.Info($"id Пользователя: {message?.From?.Id}");
+            _logger.Info($"Пользователь {message?.From?.FirstName} {message?.From?.LastName} написал боту данное сообщение: {message?.Text}\nid Пользователя: {message?.From?.Id}");
 
             var hashHelloArr = new HashSet<string>(HelloArr);
             var hashWhatsUpArr = new HashSet<string>(WhatsUpArr);
@@ -108,6 +106,7 @@ class MyTelegramBot
             if (string.Equals(message?.Text, "/request", StringComparison.OrdinalIgnoreCase)
                  || string.Equals(message?.Text, "Найти в интернете🔎", StringComparison.OrdinalIgnoreCase))
             {
+                _logger.Debug("Get request");
                 count = _random.Next(AnswSearchArr.Length);
                 await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"{AnswSearchArr[count]}", replyMarkup: ButtonOnRequest(), cancellationToken: cancellationToken);
                 isRequest = true;
@@ -118,10 +117,12 @@ class MyTelegramBot
             {
                 if (string.Equals(message?.Text, "Отменить поиск", StringComparison.OrdinalIgnoreCase))
                 {
+                    _logger.Debug("Cancel get request");
                     await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"Поиск отменен! Можно продолжать общение с ботом!", cancellationToken: cancellationToken);
                     isRequest = false;
                     return;
                 }
+                _logger.Debug("Request send");
                 var url = $"https://www.google.ru/search?q={message?.Text?.Replace(" ", "+")}";
                 await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"{url}", cancellationToken: cancellationToken);
                 isRequest = false;
@@ -130,6 +131,7 @@ class MyTelegramBot
 
             if (!string.IsNullOrEmpty(message?.Text) && hashHelloArr.Contains(message.Text))
             {
+                _logger.Debug("Command hello");
                 count = _random.Next(AnswHelloArr.Length);
                 await _telegramBotClient.SendTextMessageAsync(message.Chat.Id, $"{AnswHelloArr[count]} {message.From?.FirstName}! 🙂", cancellationToken: cancellationToken);
                 return;
@@ -138,6 +140,7 @@ class MyTelegramBot
             if (string.Equals(message?.Text, "/command", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(message?.Text, "Список команд", StringComparison.OrdinalIgnoreCase))
             {
+                _logger.Debug("Request list of commands");
                 await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"{CommandArr[0]}", cancellationToken: cancellationToken);
                 return;
             }
@@ -154,12 +157,14 @@ class MyTelegramBot
             if (string.Equals(message?.Text, "/start", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(message?.Text, "Старт", StringComparison.OrdinalIgnoreCase))
             {
+                _logger.Debug("Start");
                 await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, "Смотри что я умею! \U0001F600", replyMarkup: ButtonOnTGbot(), cancellationToken: cancellationToken);
                 return;
             }
 
             if (!string.IsNullOrEmpty(message?.Text) && hashWhatsUpArr.Contains(message.Text))
             {
+                _logger.Debug("Command WhatsUp");
                 count = _random.Next(AnswWhatsUpArr.Length);
                 await _telegramBotClient.SendTextMessageAsync(message.Chat.Id, $"{AnswWhatsUpArr[count]}", cancellationToken: cancellationToken);
                 return;
@@ -168,19 +173,22 @@ class MyTelegramBot
             if (string.Equals(message?.Text, "/getimage", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(message?.Text, "Скинуть пикчу🗿", StringComparison.OrdinalIgnoreCase))
             {
+                _logger.Debug("Get image");
                 count = _random.Next(PicArr.Length);
-                await _telegramBotClient.SendPhotoAsync(message?.Chat.Id ?? 0, $"{PicArr[count]}", "\U0001F605", cancellationToken: cancellationToken);
+                await _telegramBotClient.SendPhotoAsync(message?.Chat.Id ?? 0, $"{PicArr[count]}", $"{SticerArr[count]}", cancellationToken: cancellationToken);
                 return;
             }
 
             if (string.Equals(message?.Text, "Посмотреть погоду⛅", StringComparison.OrdinalIgnoreCase))
             {
+                _logger.Debug("Get weather");
                 await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, "Для того, чтобы бот показал погоду, напишите название города!\nДля того, чтобы узнать какие города доступны, нажмите на это: /cityWeather", cancellationToken: cancellationToken);
                 return;
             }
 
             if (!string.IsNullOrEmpty(message?.Text) && hashWhatAreYouDoArr.Contains(message.Text))
             {
+                _logger.Debug("Command WhatAreYouDo");
                 count = _random.Next(AnswWhatAreYouDoArr.Length);
                 await _telegramBotClient.SendTextMessageAsync(message.Chat.Id, $"{AnswWhatAreYouDoArr[count]}", cancellationToken: cancellationToken);
                 return;
@@ -188,6 +196,7 @@ class MyTelegramBot
 
             if (string.Equals(message?.Text, "/cityWeather", StringComparison.OrdinalIgnoreCase))
             {
+                _logger.Debug("List of the city");
                 for (int i = 0; i < WeatherCity.Length; i++)
                 {
                     await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"Узнать погоду в городе: ", replyMarkup: ButtonOnChatTGbot(WeatherCity[i]), cancellationToken: cancellationToken);
@@ -197,6 +206,7 @@ class MyTelegramBot
 
             if (!string.IsNullOrEmpty(message?.Text) && hashWeatherCity.Contains(message.Text))
             {
+                _logger.Debug("Get Weather");
                 _nameofCity = message.Text;
                 await Weather(_nameofCity, cancellationToken);
                 if (_clouds >= 0 && _clouds <= 14)

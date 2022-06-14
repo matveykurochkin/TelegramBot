@@ -24,7 +24,7 @@ static class Program
             })
             .UseWindowsService(options =>
             {
-                 options.ServiceName = ".NET Telegram Bot test service";
+                 options.ServiceName = ".NET Telegram Bot service";
             })
             .ConfigureServices(services =>
             {
