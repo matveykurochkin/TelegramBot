@@ -8,7 +8,6 @@ namespace TelegramBot;
 
 static class Program
 {
-
     static async Task Main(string[] args)
     {
         var logger = LogManager.GetCurrentClassLogger();
@@ -41,6 +40,7 @@ static class Program
         }
         finally
         {
+            logger.Info("Stoping bot");
             LogManager.Shutdown();
         }
     }
