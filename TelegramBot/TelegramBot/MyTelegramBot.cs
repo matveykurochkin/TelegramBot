@@ -206,7 +206,7 @@ class MyTelegramBot
 
             if (!string.IsNullOrEmpty(message?.Text) && hashWeatherCity.Contains(message.Text))
             {
-                _logger.Debug("Get Weather");
+                _logger.Debug("Weather response");
                 _nameofCity = message.Text;
                 await Weather(_nameofCity, cancellationToken);
                 if (_clouds >= 0 && _clouds <= 14)

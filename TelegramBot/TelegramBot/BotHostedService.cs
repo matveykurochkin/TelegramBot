@@ -18,7 +18,6 @@ namespace TelegramBot
 
         private static readonly ILogger _logger = LogManager.GetCurrentClassLogger();
         private ITelegramBotClient? _bot = null;
-
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(_opts.Token))
