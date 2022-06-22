@@ -40,7 +40,7 @@ static class Program
         }
         finally
         {
-            logger.Info("Stoping bot");
+            logger.Info("Stopping bot");
             LogManager.Shutdown();
         }
     }
