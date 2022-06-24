@@ -18,7 +18,7 @@ class MyTelegramBot
     private double _tempOfCity, _fellsLikeOfCity, _speed;
     DateTime _sunRiseDate, _sunSetDate;
     Random _random = new Random();
-    const string IgnoredText = "@MyTelegGBot";
+    const string IgnoredText = "@TGbobbot";
     private bool isRequest = false;
 
     public MyTelegramBot(ITelegramBotClient telegramBotClient)
@@ -56,11 +56,30 @@ class MyTelegramBot
             new[]
             {
                 new KeyboardButton("Посмотреть погоду⛅"),
-                new KeyboardButton("Список команд"),
+                new KeyboardButton("Найти в интернете🔎"),
+            }
+        });
+        tgButton.ResizeKeyboard = true;
+        return tgButton;
+    }
+    public IReplyMarkup ButtonCityOnTGbotForChannel()
+    {
+        var tgButton = new ReplyKeyboardMarkup(new[]
+        {
+            new[]
+            {
+                new KeyboardButton($"{WeatherCity[0]}"),
+                new KeyboardButton($"{WeatherCity[1]}"),
             },
             new[]
             {
-                new KeyboardButton("Найти в интернете🔎"),
+                new KeyboardButton($"{WeatherCity[2]}"),
+                new KeyboardButton($"{WeatherCity[3]}"),
+            },
+            new[]
+            {
+                new KeyboardButton($"{WeatherCity[6]}"),
+                new KeyboardButton($"{WeatherCity[8]}"),
             }
         });
         tgButton.ResizeKeyboard = true;
@@ -101,7 +120,7 @@ class MyTelegramBot
             var hashWhatAreYouDoArr = new HashSet<string>(WhatAreYouDoArr);
 
             if (!string.IsNullOrEmpty(message?.Text) && message.Text.StartsWith(IgnoredText))
-                message.Text = message.Text.Remove(0, 13);
+                message.Text = message.Text.Remove(0, 10);
 
             if (string.Equals(message?.Text, "/request", StringComparison.OrdinalIgnoreCase)
                  || string.Equals(message?.Text, "Найти в интернете🔎", StringComparison.OrdinalIgnoreCase))
@@ -142,6 +161,14 @@ class MyTelegramBot
             {
                 _logger.Debug("Request list of commands");
                 await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"{CommandArr[0]}", cancellationToken: cancellationToken);
+                return;
+            }
+
+            if (string.Equals(message?.Text, "/c", StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.Debug("Request list of commands for channel");
+                count = _random.Next(SticerArr.Length);
+                await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"Держи доступные города!{SticerArr[count]}", replyMarkup: ButtonCityOnTGbotForChannel(), cancellationToken: cancellationToken);
                 return;
             }
 
@@ -197,9 +224,9 @@ class MyTelegramBot
             if (string.Equals(message?.Text, "/cityWeather", StringComparison.OrdinalIgnoreCase))
             {
                 _logger.Debug("List of the city");
-                for (int i = 0; i < WeatherCity.Length; i++)
+                foreach (var city in WeatherCity)
                 {
-                    await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"Узнать погоду в городе: ", replyMarkup: ButtonOnChatTGbot(WeatherCity[i]), cancellationToken: cancellationToken);
+                    await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"Узнать погоду в городе: ", replyMarkup: ButtonOnChatTGbot(city), cancellationToken: cancellationToken);
                 }
                 return;
             }
