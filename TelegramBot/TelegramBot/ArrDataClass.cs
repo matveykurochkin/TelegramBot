@@ -32,7 +32,13 @@
                 "3⃣ /start - начать общение с ботом заного (возможно добавит что то новое)\n\n4⃣ /cityWeather - бот покажет доступные города для просмотра погоды\n\n" +
                 "5⃣ /request - бот найдет любую информацию в интернете и скинет на нее ссылку в чат\n\n6⃣ /getSticer - бот скинет рандомный стикер"};
 
+        public static string[] CommandArrAdmin = { "1⃣ /command - команда для просмотра доступных комманд\n\n2⃣ /getimage - бот скинет одну из нескольких картинок картинок\n\n" +
+                "3⃣ /start - начать общение с ботом заного (возможно добавит что то новое)\n\n4⃣ /cityWeather - бот покажет доступные города для просмотра погоды\n\n" +
+                "5⃣ /request - бот найдет любую информацию в интернете и скинет на нее ссылку в чат\n\n6⃣ /getSticer - бот скинет рандомный стикер\n\n" +
+                "7⃣ /city - бот добавит кнопки некоторых городов вместо клавиатуры [beta]"};
+
         public static string[] PicArr = { "https://www.animationsource.org/sites_content/lion_king/img_screenshot/85441.jpg", "https://i.playground.ru/p/edomFkDNVvHrgUeiC-kAkw.png",
-        "https://nationmagazine.ru/upload/iblock/98f/98fff66db88ff3b85b8b3f3692fb34cc.jpg","https://c.wallhere.com/photos/71/14/1600x1200_px_53_cat_funny_grumpy_humor_meme_quote-1627963.jpg!d" };
+        "https://nationmagazine.ru/upload/iblock/98f/98fff66db88ff3b85b8b3f3692fb34cc.jpg","https://c.wallhere.com/photos/71/14/1600x1200_px_53_cat_funny_grumpy_humor_meme_quote-1627963.jpg!d",
+        "https://favor-pravo.ru/wp-content/uploads/2018/12/oshibka.jpg"};
     }
 }

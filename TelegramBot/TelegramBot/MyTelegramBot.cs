@@ -26,18 +26,6 @@ class MyTelegramBot
         _telegramBotClient = telegramBotClient;
     }
 
-    string[] HelloArr = ArrDataClass.HelloArr;
-    string[] AnswHelloArr = ArrDataClass.AnswHelloArr;
-    string[] WhatsUpArr = ArrDataClass.WhatsUpArr;
-    string[] AnswWhatsUpArr = ArrDataClass.AnswWhatsUpArr;
-    string[] WeatherCity = ArrDataClass.WeatherCity;
-    string[] WhatAreYouDoArr = ArrDataClass.WhatAreYouDoArr;
-    string[] AnswWhatAreYouDoArr = ArrDataClass.AnswWhatAreYouDoArr;
-    string[] PicArr = ArrDataClass.PicArr;
-    string[] CommandArr = ArrDataClass.CommandArr;
-    string[] AnswSearchArr = ArrDataClass.AnswSearchArr;
-    string[] AnswOther = ArrDataClass.AnswOther;
-    string[] SticerArr = ArrDataClass.SticerArr;
     public IReplyMarkup ButtonOnTGbot()
     {
         var tgButton = new ReplyKeyboardMarkup(new[]
@@ -62,24 +50,24 @@ class MyTelegramBot
         tgButton.ResizeKeyboard = true;
         return tgButton;
     }
+
     public IReplyMarkup ButtonCityOnTGbotForChannel()
     {
         var tgButton = new ReplyKeyboardMarkup(new[]
         {
             new[]
             {
-                new KeyboardButton($"{WeatherCity[0]}"),
-                new KeyboardButton($"{WeatherCity[1]}"),
+                new KeyboardButton($"{ArrDataClass.WeatherCity[0]}"),
+                new KeyboardButton($"{ArrDataClass.WeatherCity[1]}"),
             },
             new[]
             {
-                new KeyboardButton($"{WeatherCity[2]}"),
-                new KeyboardButton($"{WeatherCity[3]}"),
+                new KeyboardButton($"{ArrDataClass.WeatherCity[2]}"),
+                new KeyboardButton($"{ArrDataClass.WeatherCity[3]}"),
             },
             new[]
             {
-                new KeyboardButton($"{WeatherCity[6]}"),
-                new KeyboardButton($"{WeatherCity[8]}"),
+                new KeyboardButton("⬅")
             }
         });
         tgButton.ResizeKeyboard = true;
@@ -111,23 +99,25 @@ class MyTelegramBot
         if (update.Type == Telegram.Bot.Types.Enums.UpdateType.Message)
         {
             var message = update.Message;
+            string? adminID = Convert.ToString(message?.From?.Id);
 
             _logger.Info($"Пользователь {message?.From?.FirstName} {message?.From?.LastName} написал боту данное сообщение: {message?.Text}\nid Пользователя: {message?.From?.Id}");
 
-            var hashHelloArr = new HashSet<string>(HelloArr);
-            var hashWhatsUpArr = new HashSet<string>(WhatsUpArr);
-            var hashWeatherCity = new HashSet<string>(WeatherCity);
-            var hashWhatAreYouDoArr = new HashSet<string>(WhatAreYouDoArr);
+            var hashHelloArr = new HashSet<string>(ArrDataClass.HelloArr);
+            var hashWhatsUpArr = new HashSet<string>(ArrDataClass.WhatsUpArr);
+            var hashWeatherCity = new HashSet<string>(ArrDataClass.WeatherCity);
+            var hashWhatAreYouDoArr = new HashSet<string>(ArrDataClass.WhatAreYouDoArr);
 
             if (!string.IsNullOrEmpty(message?.Text) && message.Text.StartsWith(IgnoredText))
                 message.Text = message.Text.Remove(0, 10);
 
             if (string.Equals(message?.Text, "/request", StringComparison.OrdinalIgnoreCase)
-                 || string.Equals(message?.Text, "Найти в интернете🔎", StringComparison.OrdinalIgnoreCase))
+                 || string.Equals(message?.Text, "Найти в интернете🔎", StringComparison.OrdinalIgnoreCase)
+                 || string.Equals(message?.Text, $"/request{IgnoredText}", StringComparison.OrdinalIgnoreCase))
             {
                 _logger.Debug("Get request");
-                count = _random.Next(AnswSearchArr.Length);
-                await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"{AnswSearchArr[count]}", replyMarkup: ButtonOnRequest(), cancellationToken: cancellationToken);
+                count = _random.Next(ArrDataClass.AnswSearchArr.Length);
+                await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"{ArrDataClass.AnswSearchArr[count]}", replyMarkup: ButtonOnRequest(), cancellationToken: cancellationToken);
                 isRequest = true;
                 return;
             }
@@ -151,58 +141,71 @@ class MyTelegramBot
             if (!string.IsNullOrEmpty(message?.Text) && hashHelloArr.Contains(message.Text))
             {
                 _logger.Debug("Command hello");
-                count = _random.Next(AnswHelloArr.Length);
-                await _telegramBotClient.SendTextMessageAsync(message.Chat.Id, $"{AnswHelloArr[count]} {message.From?.FirstName}! 🙂", cancellationToken: cancellationToken);
+                count = _random.Next(ArrDataClass.AnswHelloArr.Length);
+                await _telegramBotClient.SendTextMessageAsync(message.Chat.Id, $"{ArrDataClass.AnswHelloArr[count]} {message.From?.FirstName}! 🙂", cancellationToken: cancellationToken);
                 return;
             }
 
             if (string.Equals(message?.Text, "/command", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(message?.Text, "Список команд", StringComparison.OrdinalIgnoreCase))
+                || string.Equals(message?.Text, "Список команд", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(message?.Text, $"/command{IgnoredText}", StringComparison.OrdinalIgnoreCase))
             {
+                if (adminID == "1733375919" || adminID == "1443692088")
+                {
+                    _logger.Debug("Request list of commands for Admin");
+                    await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"{ArrDataClass.CommandArrAdmin[0]}", cancellationToken: cancellationToken);
+                    return;
+                }
                 _logger.Debug("Request list of commands");
-                await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"{CommandArr[0]}", cancellationToken: cancellationToken);
+                await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"{ArrDataClass.CommandArr[0]}", cancellationToken: cancellationToken);
                 return;
             }
 
-            if (string.Equals(message?.Text, "/c", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(message?.Text, "/city", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(message?.Text, $"/city{IgnoredText}", StringComparison.OrdinalIgnoreCase))
             {
                 _logger.Debug("Request list of commands for channel");
-                count = _random.Next(SticerArr.Length);
-                await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"Держи доступные города!{SticerArr[count]}", replyMarkup: ButtonCityOnTGbotForChannel(), cancellationToken: cancellationToken);
+                count = _random.Next(ArrDataClass.SticerArr.Length);
+                await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"Держи доступные города!{ArrDataClass.SticerArr[count]}", replyMarkup: ButtonCityOnTGbotForChannel(), cancellationToken: cancellationToken);
                 return;
             }
 
             if (string.Equals(message?.Text, "/getSticer", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(message?.Text, "Скинуть стикос😉", StringComparison.OrdinalIgnoreCase))
+                || string.Equals(message?.Text, "Скинуть стикос😉", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(message?.Text, $"/getsticer{IgnoredText}", StringComparison.OrdinalIgnoreCase))
             {
                 _logger.Debug("Get sticker");
-                count = _random.Next(SticerArr.Length);
-                await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"{SticerArr[count]}", cancellationToken: cancellationToken);
+                count = _random.Next(ArrDataClass.SticerArr.Length);
+                await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"{ArrDataClass.SticerArr[count]}", cancellationToken: cancellationToken);
                 return;
             }
 
             if (string.Equals(message?.Text, "/start", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(message?.Text, "Старт", StringComparison.OrdinalIgnoreCase))
+                || string.Equals(message?.Text, "Старт", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(message?.Text, $"/start{IgnoredText}", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(message?.Text, $"⬅", StringComparison.OrdinalIgnoreCase))
             {
                 _logger.Debug("Start");
-                await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, "Смотри что я умею! \U0001F600", replyMarkup: ButtonOnTGbot(), cancellationToken: cancellationToken);
+                count = _random.Next(ArrDataClass.SticerArr.Length);
+                await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"Смотри что я умею! {ArrDataClass.SticerArr[count]}", replyMarkup: ButtonOnTGbot(), cancellationToken: cancellationToken);
                 return;
             }
 
             if (!string.IsNullOrEmpty(message?.Text) && hashWhatsUpArr.Contains(message.Text))
             {
                 _logger.Debug("Command WhatsUp");
-                count = _random.Next(AnswWhatsUpArr.Length);
-                await _telegramBotClient.SendTextMessageAsync(message.Chat.Id, $"{AnswWhatsUpArr[count]}", cancellationToken: cancellationToken);
+                count = _random.Next(ArrDataClass.AnswWhatsUpArr.Length);
+                await _telegramBotClient.SendTextMessageAsync(message.Chat.Id, $"{ArrDataClass.AnswWhatsUpArr[count]}", cancellationToken: cancellationToken);
                 return;
             }
 
             if (string.Equals(message?.Text, "/getimage", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(message?.Text, "Скинуть пикчу🗿", StringComparison.OrdinalIgnoreCase))
+                || string.Equals(message?.Text, "Скинуть пикчу🗿", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(message?.Text, $"/getimage{IgnoredText}", StringComparison.OrdinalIgnoreCase))
             {
                 _logger.Debug("Get image");
-                count = _random.Next(PicArr.Length);
-                await _telegramBotClient.SendPhotoAsync(message?.Chat.Id ?? 0, $"{PicArr[count]}", $"{SticerArr[count]}", cancellationToken: cancellationToken);
+                count = _random.Next(ArrDataClass.PicArr.Length);
+                await _telegramBotClient.SendPhotoAsync(message?.Chat.Id ?? 0, $"{ArrDataClass.PicArr[count]}", $"{ArrDataClass.SticerArr[count]}", cancellationToken: cancellationToken);
                 return;
             }
 
@@ -216,15 +219,16 @@ class MyTelegramBot
             if (!string.IsNullOrEmpty(message?.Text) && hashWhatAreYouDoArr.Contains(message.Text))
             {
                 _logger.Debug("Command WhatAreYouDo");
-                count = _random.Next(AnswWhatAreYouDoArr.Length);
-                await _telegramBotClient.SendTextMessageAsync(message.Chat.Id, $"{AnswWhatAreYouDoArr[count]}", cancellationToken: cancellationToken);
+                count = _random.Next(ArrDataClass.AnswWhatAreYouDoArr.Length);
+                await _telegramBotClient.SendTextMessageAsync(message.Chat.Id, $"{ArrDataClass.AnswWhatAreYouDoArr[count]}", cancellationToken: cancellationToken);
                 return;
             }
 
-            if (string.Equals(message?.Text, "/cityWeather", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(message?.Text, "/cityWeather", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(message?.Text, $"/cityweather{IgnoredText}", StringComparison.OrdinalIgnoreCase))
             {
                 _logger.Debug("List of the city");
-                foreach (var city in WeatherCity)
+                foreach (var city in ArrDataClass.WeatherCity)
                 {
                     await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"Узнать погоду в городе: ", replyMarkup: ButtonOnChatTGbot(city), cancellationToken: cancellationToken);
                 }
@@ -248,8 +252,8 @@ class MyTelegramBot
                     $"Восход: {_sunRiseDate}\nЗакат: {_sunSetDate}", cancellationToken: cancellationToken);
                 return;
             }
-            count = _random.Next(AnswOther.Length);
-            await _telegramBotClient.SendTextMessageAsync(message?.Chat?.Id ?? 0, $"{AnswOther[count]} {"\n\nХочешь я это загуглю? Нажми: /request и напиши слово заново или просто перешли сообщение!"}", cancellationToken: cancellationToken);
+            count = _random.Next(ArrDataClass.AnswOther.Length);
+            await _telegramBotClient.SendTextMessageAsync(message?.Chat?.Id ?? 0, $"{ArrDataClass.AnswOther[count]} {"\n\nХочешь я это загуглю? Нажми: /request и напиши слово заново или просто перешли сообщение!"}", cancellationToken: cancellationToken);
         }
     }
 

@@ -16,18 +16,17 @@ static class Program
         {
             using IHost host = Host.CreateDefaultBuilder(args)
             .UseNLog()
-            .ConfigureServices((context, services)=>
+            .ConfigureServices((context, services) =>
             {
                 services.AddOptions<TelegramOptions>()
-                .Bind(context.Configuration.GetSection("Telegram")).Validate(to => to.EsureValid(), "Configuration for telegram bot is invalid. Please specify token");
+                .Bind(context.Configuration.GetSection("Telegram"))
+                .Validate(to => to.EsureValid(), "Configuration for telegram bot is invalid. Please specify token");
+
+                services.AddHostedService<BotHostedService>();
             })
             .UseWindowsService(options =>
             {
-                 options.ServiceName = ".NET Telegram Bot service";
-            })
-            .ConfigureServices(services =>
-            {
-                services.AddHostedService<BotHostedService>();
+                options.ServiceName = ".NET Telegram Bot service";
             })
             .Build();
 
