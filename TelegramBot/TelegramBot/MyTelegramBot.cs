@@ -14,12 +14,12 @@ class MyTelegramBot
     private readonly ITelegramBotClient _telegramBotClient;
 
     private string? _nameofCity, Cloud;
-    private int _clouds, count, _pressure, _humidity;
+    private int _clouds, count, _pressure, _humidity, _randomCountGame = 11;
     private double _tempOfCity, _fellsLikeOfCity, _speed;
     DateTime _sunRiseDate, _sunSetDate;
     Random _random = new Random();
     const string IgnoredText = "@TGbobbot";
-    private bool isRequest = false;
+    private bool isRequest = false, isRequestYT = false, isExitGame = false, isRunGame = false;
 
     public MyTelegramBot(ITelegramBotClient telegramBotClient)
     {
@@ -67,7 +67,47 @@ class MyTelegramBot
             },
             new[]
             {
+                new KeyboardButton($"Load game")
+            },
+            new[]
+            {
                 new KeyboardButton("⬅")
+            }
+        });
+        tgButton.ResizeKeyboard = true;
+        return tgButton;
+    }
+
+    public IReplyMarkup ButtonOnGame()
+    {
+        var tgButton = new ReplyKeyboardMarkup(new[]
+        {
+            new[]
+            {
+                new KeyboardButton($"0"),
+                new KeyboardButton($"1"),
+                new KeyboardButton($"2"),
+            },
+            new[]
+            {
+                new KeyboardButton($"3"),
+                new KeyboardButton($"4"),
+                new KeyboardButton($"5")
+            },
+            new[]
+            {
+                new KeyboardButton($"6"),
+                new KeyboardButton($"7"),
+                new KeyboardButton($"8")
+            },
+            new[]
+            {
+                new KeyboardButton($"9"),
+                new KeyboardButton($"10")
+            },
+            new[]
+            {
+                new KeyboardButton($"Закончить игру")
             }
         });
         tgButton.ResizeKeyboard = true;
@@ -99,7 +139,9 @@ class MyTelegramBot
         if (update.Type == Telegram.Bot.Types.Enums.UpdateType.Message)
         {
             var message = update.Message;
+
             string? adminID = Convert.ToString(message?.From?.Id);
+            var hashAdminID = new HashSet<string>(ArrDataClass.AdminId);
 
             _logger.Info($"Пользователь {message?.From?.FirstName} {message?.From?.LastName} написал боту данное сообщение: {message?.Text}\nid Пользователя: {message?.From?.Id}");
 
@@ -122,6 +164,79 @@ class MyTelegramBot
                 return;
             }
 
+            if ((string.Equals(message?.Text, "/requestYouTube", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(message?.Text, $"/requestYouTube{IgnoredText}", StringComparison.OrdinalIgnoreCase))
+                && adminID != null && hashAdminID.Contains(adminID))
+            {
+                _logger.Debug("Get request YouTube");
+                count = _random.Next(ArrDataClass.AnswSearchYTArr.Length);
+                await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"{ArrDataClass.AnswSearchYTArr[count]}", replyMarkup: ButtonOnRequest(), cancellationToken: cancellationToken);
+                isRequestYT = true;
+                return;
+            }
+
+            if (isExitGame == true)
+            {
+                if (string.Equals(message?.Text, "Отменить поиск", StringComparison.OrdinalIgnoreCase))
+                {
+                    _logger.Debug("Cancel get request YouTube");
+                    await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"Поиск отменен! Можно продолжать общение с ботом!", cancellationToken: cancellationToken);
+                    isExitGame = false;
+                    return;
+                }
+            }
+
+            if (isRunGame == true)
+            {
+                if (string.Equals(message?.Text, "Закончить игру", StringComparison.OrdinalIgnoreCase))
+                {
+                    _logger.Debug("Exit game");
+                    await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"Игра закончена! Можно продолжать общение с ботом!", replyMarkup: ButtonCityOnTGbotForChannel(), cancellationToken: cancellationToken);
+                    isRunGame = false;
+                    return;
+                }
+                if (int.TryParse(message?.Text, out int _randomCountGame))
+                {
+                    _randomCountGame = _random.Next(0, 11);               
+                    if (Convert.ToInt32(message?.Text) == _randomCountGame)
+                    {
+                        _logger.Debug("Win and close game");
+                        await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"Поздравляю ты победил!\nХочешь еще раз? Тогда нажми сюда: /game",replyMarkup: ButtonCityOnTGbotForChannel(), cancellationToken: cancellationToken);
+                        isRunGame = false;
+                        return;
+                    }
+                    else
+                    {
+                        _logger.Debug("lose and close game");
+                        await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"Ты проиграл! Загаданное число: {_randomCountGame}\nХочешь еще раз? Тогда нажми сюда: /game", replyMarkup: ButtonCityOnTGbotForChannel(), cancellationToken: cancellationToken);
+                        isRunGame = false;
+                        return;
+                    }
+                }
+                else
+                {
+                    _logger.Debug("Incorrect data in the game");
+                    await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"Пожалуйста введите корректные данные!", cancellationToken: cancellationToken);
+                    return;
+                }
+            }
+
+            if (isRequestYT == true)
+            {
+                if (string.Equals(message?.Text, "Отменить поиск", StringComparison.OrdinalIgnoreCase))
+                {
+                    _logger.Debug("Cancel get request YouTube");
+                    await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"Поиск отменен! Можно продолжать общение с ботом!", cancellationToken: cancellationToken);
+                    isRequestYT = false;
+                    return;
+                }
+                _logger.Debug("Request YouTube send");
+                var url = $"https://www.youtube.com/results?search_query={message?.Text?.Replace(" ", "+")}";
+                await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"{url}", cancellationToken: cancellationToken);
+                isRequestYT = false;
+                return;
+            }
+
             if (isRequest == true)
             {
                 if (string.Equals(message?.Text, "Отменить поиск", StringComparison.OrdinalIgnoreCase))
@@ -138,6 +253,16 @@ class MyTelegramBot
                 return;
             }
 
+            if ((string.Equals(message?.Text, "Load game", StringComparison.OrdinalIgnoreCase) || string.Equals(message?.Text, "/game", StringComparison.OrdinalIgnoreCase))
+                && adminID != null && hashAdminID.Contains(adminID))
+            {
+                _logger.Debug("Game run");
+                _randomCountGame = _random.Next(0, 11);
+                await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"Загадано число от 0 до 10! Попробуй отгадать!", replyMarkup: ButtonOnGame(), cancellationToken: cancellationToken);
+                isRunGame = true;
+                return;
+            }
+
             if (!string.IsNullOrEmpty(message?.Text) && hashHelloArr.Contains(message.Text))
             {
                 _logger.Debug("Command hello");
@@ -150,10 +275,10 @@ class MyTelegramBot
                 || string.Equals(message?.Text, "Список команд", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(message?.Text, $"/command{IgnoredText}", StringComparison.OrdinalIgnoreCase))
             {
-                if (adminID == "1733375919" || adminID == "1443692088")
+                if (!string.IsNullOrEmpty(message?.Text) && adminID != null && hashAdminID.Contains(adminID))
                 {
                     _logger.Debug("Request list of commands for Admin");
-                    await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"{ArrDataClass.CommandArrAdmin[0]}", cancellationToken: cancellationToken);
+                    await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"{ArrDataClass.CommandArr[0]} {ArrDataClass.CommandArrAdmin[0]}", cancellationToken: cancellationToken);
                     return;
                 }
                 _logger.Debug("Request list of commands");
@@ -161,12 +286,13 @@ class MyTelegramBot
                 return;
             }
 
-            if (string.Equals(message?.Text, "/city", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(message?.Text, $"/city{IgnoredText}", StringComparison.OrdinalIgnoreCase))
+            if ((string.Equals(message?.Text, "/testFunction", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(message?.Text, $"/testFunction{IgnoredText}", StringComparison.OrdinalIgnoreCase))
+                && adminID != null && hashAdminID.Contains(adminID))
             {
                 _logger.Debug("Request list of commands for channel");
                 count = _random.Next(ArrDataClass.SticerArr.Length);
-                await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"Держи доступные города!{ArrDataClass.SticerArr[count]}", replyMarkup: ButtonCityOnTGbotForChannel(), cancellationToken: cancellationToken);
+                await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"Держи доступные тестовые функции!{ArrDataClass.SticerArr[count]}", replyMarkup: ButtonCityOnTGbotForChannel(), cancellationToken: cancellationToken);
                 return;
             }
 
@@ -286,7 +412,7 @@ class MyTelegramBot
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Непредвиденная ошибка");
+            _logger.Error(ex, "Error response weather");
         }
     }
 }
