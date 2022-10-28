@@ -1,8 +1,10 @@
 using System.Net.Http.Json;
 using System.Web;
+using Microsoft.Extensions.Configuration;
 using NLog;
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using TelegramBot.Configuration;
 
 namespace TelegramBot;
 
@@ -17,8 +19,17 @@ class MyTelegramBot
     private double _tempOfCity, _fellsLikeOfCity, _speed;
     DateTime _sunRiseDate, _sunSetDate;
     Random _random = new Random();
-    const string IgnoredText = "@TGbobbot";
+    WeatherOptions _weatherOptions = new WeatherOptions();
+    const string _nameBot = "@TGbobbot";
     private bool isRequest = false, isRequestYT = false, isExitGame = false, isRunGame = false, isEasy = false, isMedium = false, isHard = false;
+
+    public string CreateConfig()
+    {
+        var AppName = new ConfigurationBuilder().AddJsonFile("appsettings.json")
+                .Build()
+                .GetSection("APIWeather")["TokenWeatherID"];
+        return AppName;
+    }
 
     public MyTelegramBot(ITelegramBotClient telegramBotClient)
     {
@@ -26,7 +37,7 @@ class MyTelegramBot
     }
     internal async Task UpdateHandler(ITelegramBotClient bot, Update update, CancellationToken cancellationToken)
     {
-        _logger.Debug("Update received: {@update}", update);
+        _logger.Debug($"Update received: {update}");
         if (update.Type == Telegram.Bot.Types.Enums.UpdateType.Message)
         {
             var message = update.Message;
@@ -37,9 +48,7 @@ class MyTelegramBot
             bool isAdmin()
             {
                 if (adminID != null && hashAdminID.Contains(adminID))
-                {
                     return true;
-                }
                 return false;
             }
 
@@ -50,12 +59,12 @@ class MyTelegramBot
             var hashWeatherCity = new HashSet<string>(ArrDataClass.WeatherCity);
             var hashWhatAreYouDoArr = new HashSet<string>(ArrDataClass.WhatAreYouDoArr);
 
-            if (!string.IsNullOrEmpty(message?.Text) && message.Text.StartsWith(IgnoredText))
-                message.Text = message.Text.Remove(0, 10);
+            if (!string.IsNullOrEmpty(message?.Text) && message.Text.StartsWith(_nameBot))
+                message.Text = message.Text.Remove(0, _nameBot.Length + 1);
 
             if (string.Equals(message?.Text, "/request", StringComparison.OrdinalIgnoreCase)
                  || string.Equals(message?.Text, "Найти в интернете🔎", StringComparison.OrdinalIgnoreCase)
-                 || string.Equals(message?.Text, $"/request{IgnoredText}", StringComparison.OrdinalIgnoreCase))
+                 || string.Equals(message?.Text, $"/request{_nameBot}", StringComparison.OrdinalIgnoreCase))
             {
                 _logger.Debug("Get request");
                 count = _random.Next(ArrDataClass.AnswSearchArr.Length);
@@ -65,7 +74,7 @@ class MyTelegramBot
             }
 
             if ((string.Equals(message?.Text, "/requestYouTube", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(message?.Text, $"/requestYouTube{IgnoredText}", StringComparison.OrdinalIgnoreCase))
+                || string.Equals(message?.Text, $"/requestYouTube{_nameBot}", StringComparison.OrdinalIgnoreCase))
                 && isAdmin())
             {
                 _logger.Debug("Get request YouTube");
@@ -132,7 +141,7 @@ class MyTelegramBot
                             await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"Число в диапазоне от 0 до 2!", cancellationToken: cancellationToken);
                         else
                             await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"Число в диапазоне от 3 до 5!", cancellationToken: cancellationToken);
-                        return;                       
+                        return;
                     }
                     else if (isMedium)
                     {
@@ -153,7 +162,7 @@ class MyTelegramBot
                         return;
                     }
                     return;
-                }            
+                }
             }
 
             if (isRunGame == true && (isEasy || isMedium || isHard))
@@ -245,7 +254,7 @@ class MyTelegramBot
 
             if (string.Equals(message?.Text, "/command", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(message?.Text, "Список команд", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(message?.Text, $"/command{IgnoredText}", StringComparison.OrdinalIgnoreCase))
+                || string.Equals(message?.Text, $"/command{_nameBot}", StringComparison.OrdinalIgnoreCase))
             {
                 if (!string.IsNullOrEmpty(message?.Text) && adminID != null && hashAdminID.Contains(adminID))
                 {
@@ -259,7 +268,7 @@ class MyTelegramBot
             }
 
             if ((string.Equals(message?.Text, "/testFunction", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(message?.Text, $"/testFunction{IgnoredText}", StringComparison.OrdinalIgnoreCase))
+                || string.Equals(message?.Text, $"/testFunction{_nameBot}", StringComparison.OrdinalIgnoreCase))
                 && isAdmin())
             {
                 _logger.Debug("Request list of commands for channel");
@@ -270,7 +279,7 @@ class MyTelegramBot
 
             if (string.Equals(message?.Text, "/getSticer", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(message?.Text, "Скинуть стикос😉", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(message?.Text, $"/getsticer{IgnoredText}", StringComparison.OrdinalIgnoreCase))
+                || string.Equals(message?.Text, $"/getsticer{_nameBot}", StringComparison.OrdinalIgnoreCase))
             {
                 _logger.Debug("Get sticker");
                 count = _random.Next(ArrDataClass.SticerArr.Length);
@@ -280,7 +289,7 @@ class MyTelegramBot
 
             if (string.Equals(message?.Text, "/start", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(message?.Text, "Старт", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(message?.Text, $"/start{IgnoredText}", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(message?.Text, $"/start{_nameBot}", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(message?.Text, $"⬅", StringComparison.OrdinalIgnoreCase))
             {
                 _logger.Debug("Start");
@@ -299,7 +308,7 @@ class MyTelegramBot
 
             if (string.Equals(message?.Text, "/getimage", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(message?.Text, "Скинуть пикчу🗿", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(message?.Text, $"/getimage{IgnoredText}", StringComparison.OrdinalIgnoreCase))
+                || string.Equals(message?.Text, $"/getimage{_nameBot}", StringComparison.OrdinalIgnoreCase))
             {
                 _logger.Debug("Get image");
                 count = _random.Next(ArrDataClass.PicArr.Length);
@@ -323,7 +332,7 @@ class MyTelegramBot
             }
 
             if (string.Equals(message?.Text, "/cityWeather", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(message?.Text, $"/cityweather{IgnoredText}", StringComparison.OrdinalIgnoreCase))
+                || string.Equals(message?.Text, $"/cityweather{_nameBot}", StringComparison.OrdinalIgnoreCase))
             {
                 _logger.Debug("List of the city");
                 foreach (var city in ArrDataClass.WeatherCity)
@@ -333,7 +342,16 @@ class MyTelegramBot
                 return;
             }
 
-            if (!string.IsNullOrEmpty(message?.Text) && hashWeatherCity.Contains(message.Text))
+            if (string.Equals(message?.Text, "/whatwear", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(message?.Text, $"Что сегодня надеть?", StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.Debug("What to wear answer");
+                count = _random.Next(ArrDataClass.SticerArr.Length);
+                await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"Функция в разработке! {ArrDataClass.SticerArr[count]}", cancellationToken: cancellationToken);
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(message?.Text) && hashWeatherCity.Contains(message.Text) && !string.IsNullOrEmpty(CreateConfig()))
             {
                 _logger.Debug("Weather response");
                 _nameofCity = message.Text;
@@ -364,7 +382,9 @@ class MyTelegramBot
     private async Task Weather(string cityName, CancellationToken cancellationToken)
     {
         _logger.Debug("Try to get weather");
-        const string appid = "2351aaee5394613fc0d14424239de2bd";
+
+        string appid = _weatherOptions.EsureValidTokenWeather(CreateConfig());
+
         try
         {
             var url = $"https://api.openweathermap.org/data/2.5/weather?q={HttpUtility.UrlEncode(cityName)}&appid={HttpUtility.UrlEncode(appid)}&units=metric";
@@ -385,6 +405,7 @@ class MyTelegramBot
         catch (Exception ex)
         {
             _logger.Error(ex, "Error response weather");
+            return;
         }
     }
 }

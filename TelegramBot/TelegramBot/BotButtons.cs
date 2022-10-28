@@ -23,6 +23,10 @@ namespace TelegramBot
             {
                 new KeyboardButton("Посмотреть погоду⛅"),
                 new KeyboardButton("Найти в интернете🔎"),
+            },
+            new[]
+            {
+                new KeyboardButton("Что сегодня надеть?")
             }
         });
             tgButton.ResizeKeyboard = true;
@@ -125,21 +129,20 @@ namespace TelegramBot
             },
             new[]
             {
-                new KeyboardButton($"3"),
                 new KeyboardButton($"4"),
                 new KeyboardButton($"5"),
-                new KeyboardButton($"6")
+                new KeyboardButton($"6"),
+                new KeyboardButton($"7")
             },
             new[]
             {
-                new KeyboardButton($"7"),
                 new KeyboardButton($"8"),
                 new KeyboardButton($"9"),
-                new KeyboardButton($"10")
+                new KeyboardButton($"10"),
+                new KeyboardButton($"11")
             },
             new[]
             {
-                new KeyboardButton($"11"),
                 new KeyboardButton($"12"),
                 new KeyboardButton($"13"),
                 new KeyboardButton($"14"),

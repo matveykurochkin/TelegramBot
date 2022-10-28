@@ -1,8 +1,6 @@
-﻿namespace TelegramBot.Configuration
+﻿namespace TelegramBot.Configuration;
+internal class TelegramOptions
 {
-    internal class TelegramOptions
-    {
-        public string? Token { get; set; }
-        internal bool EsureValid() => !string.IsNullOrEmpty(Token);
-    }
+    public string? Token { get; set; }
+    internal bool EsureValid() => !string.IsNullOrEmpty(Token);
 }

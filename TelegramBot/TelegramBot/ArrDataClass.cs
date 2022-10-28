@@ -34,9 +34,11 @@
 
         public static string[] CommandArr = { "1⃣ /command - команда для просмотра доступных комманд\n\n2⃣ /getimage - бот скинет одну из нескольких картинок картинок\n\n" +
                 "3⃣ /start - начать общение с ботом заного (возможно добавит что то новое)\n\n4⃣ /cityWeather - бот покажет доступные города для просмотра погоды\n\n" +
-                "5⃣ /request - бот найдет любую информацию в интернете и скинет на нее ссылку в чат\n\n6⃣ /getSticer - бот скинет рандомный стикер"};
+                "5⃣ /request - бот найдет любую информацию в интернете и скинет на нее ссылку в чат\n\n6⃣ /getSticer - бот скинет рандомный стикер" +
+                "\n\n7⃣ /whatwear - бот расскажет что надеть"};
 
-        public static string[] CommandArrAdmin = { "\n\n7⃣ /testFunction - бот добавит кнопки некоторых городов вместо клавиатуры [beta]\n\n8⃣ /requestYouTube - бот найдет любое видео на YouTube и скинет ссылку на него [beta]" };
+        public static string[] CommandArrAdmin = { "\n\n(тестовая функция) /testFunction - бот добавит кнопки некоторых городов вместо клавиатуры [beta]\n\n(тестовая функция) /requestYouTube - бот найдет любое видео на YouTube и скинет ссылку на него [beta]" +
+                "\n\n(тестовая функция) /game - бот запустит игру «Угадай число»[beta]" };
 
         public static string[] PicArr = { "https://www.animationsource.org/sites_content/lion_king/img_screenshot/85441.jpg", "https://i.playground.ru/p/edomFkDNVvHrgUeiC-kAkw.png",
         "https://nationmagazine.ru/upload/iblock/98f/98fff66db88ff3b85b8b3f3692fb34cc.jpg","https://c.wallhere.com/photos/71/14/1600x1200_px_53_cat_funny_grumpy_humor_meme_quote-1627963.jpg!d",
