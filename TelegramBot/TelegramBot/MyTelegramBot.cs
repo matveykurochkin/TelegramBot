@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Web;
+using Fortnite_API;
 using Microsoft.Extensions.Configuration;
 using NLog;
 using Telegram.Bot;
@@ -7,7 +8,6 @@ using Telegram.Bot.Types;
 using TelegramBot.Configuration;
 
 namespace TelegramBot;
-
 class MyTelegramBot
 {
     private static readonly ILogger _logger = LogManager.GetCurrentClassLogger();
@@ -26,15 +26,28 @@ class MyTelegramBot
     public string CreateConfig()
     {
         var AppName = new ConfigurationBuilder().AddJsonFile("appsettings.json")
-                .Build()
-                .GetSection("APIWeather")["TokenWeatherID"];
+            .Build()
+            .GetSection("APIWeather")["TokenWeatherID"];
         return AppName;
+    }
+
+    public async Task<string> FortniteMap(CancellationToken cancellationToken)
+    {
+        var apiClient = new FortniteApiClient();
+        var mapResponse = await apiClient.V1.Map.GetAsync(token: cancellationToken);
+        if (mapResponse.Status != 200)
+        {
+            throw new InvalidOperationException($"Error call api: {mapResponse.Error}");
+        }
+        var imageLink = mapResponse.Data.Images.POIs.ToString();
+        return imageLink;
     }
 
     public MyTelegramBot(ITelegramBotClient telegramBotClient)
     {
         _telegramBotClient = telegramBotClient;
     }
+
     internal async Task UpdateHandler(ITelegramBotClient bot, Update update, CancellationToken cancellationToken)
     {
         _logger.Debug($"Update received: {update}");
@@ -63,8 +76,8 @@ class MyTelegramBot
                 message.Text = message.Text.Remove(0, _nameBot.Length + 1);
 
             if (string.Equals(message?.Text, "/request", StringComparison.OrdinalIgnoreCase)
-                 || string.Equals(message?.Text, "Найти в интернете🔎", StringComparison.OrdinalIgnoreCase)
-                 || string.Equals(message?.Text, $"/request{_nameBot}", StringComparison.OrdinalIgnoreCase))
+                || string.Equals(message?.Text, "Найти в интернете🔎", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(message?.Text, $"/request{_nameBot}", StringComparison.OrdinalIgnoreCase))
             {
                 _logger.Debug("Get request");
                 count = _random.Next(ArrDataClass.AnswSearchArr.Length);
@@ -74,7 +87,7 @@ class MyTelegramBot
             }
 
             if ((string.Equals(message?.Text, "/requestYouTube", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(message?.Text, $"/requestYouTube{_nameBot}", StringComparison.OrdinalIgnoreCase))
+                 || string.Equals(message?.Text, $"/requestYouTube{_nameBot}", StringComparison.OrdinalIgnoreCase))
                 && isAdmin())
             {
                 _logger.Debug("Get request YouTube");
@@ -84,7 +97,7 @@ class MyTelegramBot
                 return;
             }
 
-            if (isExitGame == true)
+            if (isExitGame)
             {
                 if (string.Equals(message?.Text, "Отменить поиск", StringComparison.OrdinalIgnoreCase))
                 {
@@ -95,7 +108,7 @@ class MyTelegramBot
                 }
             }
 
-            if (isRunGame == true)
+            if (isRunGame)
             {
                 if (string.Equals(message?.Text, "Закончить игру", StringComparison.OrdinalIgnoreCase))
                 {
@@ -114,7 +127,7 @@ class MyTelegramBot
                     return;
                 }
                 else if (string.Equals(message?.Text, "Средне", StringComparison.OrdinalIgnoreCase)
-                    && isAdmin())
+                         && isAdmin())
                 {
                     _randomCountGame = _random.Next(0, 11);
                     await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"Выбран средний режим игры! Удачи!", replyMarkup: BotButtons.ButtonOnGameMedium(), cancellationToken: cancellationToken);
@@ -122,7 +135,7 @@ class MyTelegramBot
                     return;
                 }
                 else if (string.Equals(message?.Text, "Сложно", StringComparison.OrdinalIgnoreCase)
-                    && isAdmin())
+                         && isAdmin())
                 {
                     _randomCountGame = _random.Next(0, 16);
                     await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"Выбран сложный режим игры! Удачи!", replyMarkup: BotButtons.ButtonOnGameHard(), cancellationToken: cancellationToken);
@@ -161,11 +174,12 @@ class MyTelegramBot
                             await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"Число в диапазоне от 9 до 15!", cancellationToken: cancellationToken);
                         return;
                     }
+
                     return;
                 }
             }
 
-            if (isRunGame == true && (isEasy || isMedium || isHard))
+            if (isRunGame && (isEasy || isMedium || isHard))
             {
                 void ExitGame()
                 {
@@ -184,24 +198,20 @@ class MyTelegramBot
                         ExitGame();
                         return;
                     }
-                    else
-                    {
-                        _logger.Debug("lose and close game");
-                        await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"Ты проиграл! Загаданное число: {_randomCountGame}\nХочешь еще раз? Тогда нажми сюда: /game", replyMarkup: BotButtons.ButtonCityOnTGbotForChannel(), cancellationToken: cancellationToken);
-                        ExitGame();
-                        return;
-                    }
-                }
-                else
-                {
-                    _logger.Debug("Incorrect data in the game");
-                    await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"Пожалуйста введите корректные данные!", replyMarkup: BotButtons.ButtonCityOnTGbotForChannel(), cancellationToken: cancellationToken);
-                    isRunGame = false;
+
+                    _logger.Debug("lose and close game");
+                    await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"Ты проиграл! Загаданное число: {_randomCountGame}\nХочешь еще раз? Тогда нажми сюда: /game", replyMarkup: BotButtons.ButtonCityOnTGbotForChannel(), cancellationToken: cancellationToken);
+                    ExitGame();
                     return;
                 }
+
+                _logger.Debug("Incorrect data in the game");
+                await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"Пожалуйста введите корректные данные!", replyMarkup: BotButtons.ButtonCityOnTGbotForChannel(), cancellationToken: cancellationToken);
+                isRunGame = false;
+                return;
             }
 
-            if (isRequestYT == true)
+            if (isRequestYT)
             {
                 if (string.Equals(message?.Text, "Отменить поиск", StringComparison.OrdinalIgnoreCase))
                 {
@@ -210,6 +220,7 @@ class MyTelegramBot
                     isRequestYT = false;
                     return;
                 }
+
                 _logger.Debug("Request YouTube send");
                 var url = $"https://www.youtube.com/results?search_query={message?.Text?.Replace(" ", "+")}";
                 await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"{url}", cancellationToken: cancellationToken);
@@ -217,7 +228,7 @@ class MyTelegramBot
                 return;
             }
 
-            if (isRequest == true)
+            if (isRequest)
             {
                 if (string.Equals(message?.Text, "Отменить поиск", StringComparison.OrdinalIgnoreCase))
                 {
@@ -226,10 +237,21 @@ class MyTelegramBot
                     isRequest = false;
                     return;
                 }
+
                 _logger.Debug("Request send");
                 var url = $"https://www.google.ru/search?q={message?.Text?.Replace(" ", "+")}";
                 await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"{url}", cancellationToken: cancellationToken);
                 isRequest = false;
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(message?.Text) && (string.Equals(message?.Text, "Карта Fortnite🗺", StringComparison.OrdinalIgnoreCase)
+                                                     || string.Equals(message?.Text, "/mapfortnite", StringComparison.OrdinalIgnoreCase)))
+            {
+                _logger.Debug("Get map fortnite");
+                count = _random.Next(ArrDataClass.SticerArr.Length);
+                var mapLink = await FortniteMap(cancellationToken);
+                await _telegramBotClient.SendPhotoAsync(message?.Chat.Id ?? 0, $"{mapLink}", $"Map Fortnite {ArrDataClass.SticerArr[count]}", cancellationToken: cancellationToken);
                 return;
             }
 
@@ -239,7 +261,7 @@ class MyTelegramBot
                 _logger.Debug("Game run");
                 _randomCountGame = _random.Next(0, 11);
                 await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"Игра «Угадай число»!\nВыбери сложность игры, где:\n" +
-                    $"1) Легко (диапазон от 0 до 5)\n2) Средне (диапазон от 0 до 10)\n3) Сложно (диапазон от 0 до 15)", replyMarkup: BotButtons.difficultySelectionButton(), cancellationToken: cancellationToken);
+                                                                                     $"1) Легко (диапазон от 0 до 5)\n2) Средне (диапазон от 0 до 10)\n3) Сложно (диапазон от 0 до 15)", replyMarkup: BotButtons.difficultySelectionButton(), cancellationToken: cancellationToken);
                 isRunGame = true;
                 return;
             }
@@ -262,13 +284,14 @@ class MyTelegramBot
                     await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"{ArrDataClass.CommandArr[0]} {ArrDataClass.CommandArrAdmin[0]}", cancellationToken: cancellationToken);
                     return;
                 }
+
                 _logger.Debug("Request list of commands");
                 await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"{ArrDataClass.CommandArr[0]}", cancellationToken: cancellationToken);
                 return;
             }
 
             if ((string.Equals(message?.Text, "/testFunction", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(message?.Text, $"/testFunction{_nameBot}", StringComparison.OrdinalIgnoreCase))
+                 || string.Equals(message?.Text, $"/testFunction{_nameBot}", StringComparison.OrdinalIgnoreCase))
                 && isAdmin())
             {
                 _logger.Debug("Request list of commands for channel");
@@ -339,6 +362,7 @@ class MyTelegramBot
                 {
                     await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"Узнать погоду в городе: ", replyMarkup: BotButtons.ButtonOnChatTGbot(city), cancellationToken: cancellationToken);
                 }
+
                 return;
             }
 
@@ -356,18 +380,19 @@ class MyTelegramBot
                 _logger.Debug("Weather response");
                 _nameofCity = message.Text;
                 await Weather(_nameofCity, cancellationToken);
-                if (_clouds >= 0 && _clouds <= 14)
+                if (_clouds is >= 0 and <= 14)
                     Cloud = "☀";
-                else if (_clouds >= 15 && _clouds <= 40)
+                else if (_clouds is >= 15 and <= 40)
                     Cloud = "⛅";
-                else if (_clouds >= 41 && _clouds <= 120)
+                else if (_clouds is >= 41 and <= 120)
                     Cloud = "☁";
-                await _telegramBotClient.SendTextMessageAsync(message.Chat.Id, $"Температура в {_nameofCity}: {_tempOfCity} °C {Cloud}\nОщущается как { _fellsLikeOfCity} °C\n" +
-                    $"Влажность воздуха: {_humidity}%\nСкорость ветра: {_speed} м/с\n" +
-                    $"Атмосферное давление: {Math.Round(_pressure * 0.75)} мм рт.ст.\n" +
-                    $"Восход: {_sunRiseDate}\nЗакат: {_sunSetDate}", cancellationToken: cancellationToken);
+                await _telegramBotClient.SendTextMessageAsync(message.Chat.Id, $"Температура в {_nameofCity}: {_tempOfCity} °C {Cloud}\nОщущается как {_fellsLikeOfCity} °C\n" +
+                                                                               $"Влажность воздуха: {_humidity}%\nСкорость ветра: {_speed} м/с\n" +
+                                                                               $"Атмосферное давление: {Math.Round(_pressure * 0.75)} мм рт.ст.\n" +
+                                                                               $"Восход: {_sunRiseDate}\nЗакат: {_sunSetDate}", cancellationToken: cancellationToken);
                 return;
             }
+
             count = _random.Next(ArrDataClass.AnswOther.Length);
             await _telegramBotClient.SendTextMessageAsync(message?.Chat?.Id ?? 0, $"{ArrDataClass.AnswOther[count]} {"\n\nХочешь я это загуглю? Нажми: /request и напиши слово заново или просто перешли сообщение!"}", cancellationToken: cancellationToken);
         }
@@ -405,7 +430,6 @@ class MyTelegramBot
         catch (Exception ex)
         {
             _logger.Error(ex, "Error response weather");
-            return;
         }
     }
 }

@@ -26,7 +26,8 @@ namespace TelegramBot
             },
             new[]
             {
-                new KeyboardButton("Что сегодня надеть?")
+             //   new KeyboardButton("Что сегодня надеть?")
+                new KeyboardButton("Карта Fortnite🗺")
             }
         });
             tgButton.ResizeKeyboard = true;

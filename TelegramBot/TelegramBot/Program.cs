@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NLog;
-using NLog.Web;
+// using NLog.Web;
 using TelegramBot.Configuration;
 
 namespace TelegramBot;
@@ -15,7 +15,7 @@ static class Program
         try
         {
             using IHost host = Host.CreateDefaultBuilder(args)
-            .UseNLog()
+            // .UseNLog()
             .ConfigureServices((context, services) =>
             {
                 services.AddOptions<TelegramOptions>()
