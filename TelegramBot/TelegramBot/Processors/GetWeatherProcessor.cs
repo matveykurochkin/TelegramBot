@@ -11,46 +11,45 @@ namespace TelegramBot.Processors;
 [TelegramCommand("Владимир", "Головино", "Москва", "Санкт-Петербург", "Боголюбово", "Гусь-Хрустальный", "Дубай", "Сочи" )]
 internal class GetWeatherProcessor : MessageProcessorBase, ITelegramMessageProcessor
 {
-    private string? _nameofCity, Cloud;
+    private string? _nameofCity, _cloud;
     private int _clouds, _pressure, _humidity;
     private double _tempOfCity, _fellsLikeOfCity, _speed;
     DateTime _sunRiseDate, _sunSetDate;
     WeatherOptions _weatherOptions = new WeatherOptions();
     public async Task ProcessMessage(ITelegramBotClient bot, Update update, CancellationToken cancellationToken)
     {
-        var AppName = new ConfigurationBuilder().AddJsonFile("appsettings.json")
+        var appName = new ConfigurationBuilder().AddJsonFile("appsettings.json")
                         .Build()
                         .GetSection("APIWeather")["TokenWeatherID"];
 
-        if (!string.IsNullOrEmpty(AppName))
+        if (!string.IsNullOrEmpty(appName))
         {
             _logger.Debug("Weather response");
             _nameofCity = update.Message?.Text;
             await Weather(cityName: _nameofCity, cancellationToken);
             if (_clouds is >= 0 and <= 14)
-                Cloud = "☀";
+                _cloud = "☀";
             else if (_clouds is >= 15 and <= 40)
-                Cloud = "⛅";
+                _cloud = "⛅";
             else if (_clouds is >= 41 and <= 120)
-                Cloud = "☁";
-            await bot.SendTextMessageAsync(update.Message?.Chat.Id ?? 0, $"Температура в {_nameofCity}: {_tempOfCity} °C {Cloud}\nОщущается как {_fellsLikeOfCity} °C\n" +
+                _cloud = "☁";
+            await bot.SendTextMessageAsync(update.Message?.Chat.Id ?? 0, $"Температура в {_nameofCity}: {_tempOfCity} °C {_cloud}\nОщущается как {_fellsLikeOfCity} °C\n" +
                                                                            $"Влажность воздуха: {_humidity}%\nСкорость ветра: {_speed} м/с\n" +
                                                                            $"Атмосферное давление: {Math.Round(_pressure * 0.75)} мм рт.ст.\n" +
                                                                            $"Восход: {_sunRiseDate}\nЗакат: {_sunSetDate}", cancellationToken: cancellationToken);
-            return;
         }
 
-        async Task Weather(string? cityName, CancellationToken cancellationToken)
+        async Task Weather(string? cityName, CancellationToken ct)
         {
             _logger.Debug("Try to get weather");
 
-            string appid = _weatherOptions.EsureValidTokenWeather(AppName);
+            string appid = _weatherOptions.EsureValidTokenWeather(appName);
 
             try
             {
                 var url = $"https://api.openweathermap.org/data/2.5/weather?q={HttpUtility.UrlEncode(cityName)}&appid={HttpUtility.UrlEncode(appid)}&units=metric";
                 using var hc = new HttpClient();
-                var weather = await hc.GetFromJsonAsync<WeatherResponse>(url, cancellationToken);
+                var weather = await hc.GetFromJsonAsync<WeatherResponse>(url, ct);
                 if (weather != null)
                 {
                     _tempOfCity = Math.Round(weather.main.temp);

@@ -6,11 +6,15 @@ namespace TelegramBot;
 
 class MyTelegramBot
 {
+    // ReSharper disable once InconsistentNaming
     private static readonly ILogger _logger = LogManager.GetCurrentClassLogger();
 
     private readonly ITelegramBotClient _telegramBotClient;
     private readonly MessageProcessorFactory _processorFactory = new();
-    protected static readonly Random _random = new Random();
+
+    // ReSharper disable once InconsistentNaming
+    protected static readonly Random _random = new();
+
     public MyTelegramBot(ITelegramBotClient telegramBotClient)
     {
         _telegramBotClient = telegramBotClient;
@@ -31,8 +35,9 @@ class MyTelegramBot
             await processor.ProcessMessage(bot, update, cancellationToken);
             return;
         }
+
         var count = _random.Next(ArrDataClass.AnswOther.Length);
-        await _telegramBotClient.SendTextMessageAsync(message?.Chat?.Id ?? 0, $"{ArrDataClass.AnswOther[count]}", cancellationToken: cancellationToken);
+        await _telegramBotClient.SendTextMessageAsync(message?.Chat.Id ?? 0, $"{ArrDataClass.AnswOther[count]}", cancellationToken: cancellationToken);
     }
 
     internal Task ErrorHandler(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)

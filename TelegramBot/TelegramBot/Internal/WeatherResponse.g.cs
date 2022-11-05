@@ -1,4 +1,4 @@
-namespace TelegramBot;
+namespace TelegramBot.Internal;
 
 public class Clouds
 {

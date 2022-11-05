@@ -26,8 +26,8 @@ internal class GetFortniteNewsProcessor : MessageProcessorBase, ITelegramMessage
 
         for (var i = 0; i < newsBRResponse.Data.Br.Motds.Count; i++)
         {
-            title = newsBRResponse.Data.Br.Motds[i].Title.ToString();
-            body = newsBRResponse.Data.Br.Motds[i].Body.ToString();
+            title = newsBRResponse.Data.Br.Motds[i].Title;
+            body = newsBRResponse.Data.Br.Motds[i].Body;
             image = newsBRResponse.Data.Br.Motds[i].Image.ToString();
             Thread.Sleep(150);
             await bot.SendPhotoAsync(update.Message?.Chat.Id ?? 0, $"{image}", caption: $"{update.Message?.From?.FirstName}, держи новости Королевской Битвы Fortnite{ArrDataClass.SticerArr[count]}\n" +
@@ -36,8 +36,8 @@ internal class GetFortniteNewsProcessor : MessageProcessorBase, ITelegramMessage
 
         for (var i = 0; i < newsSTWResponse.Data.Messages.Count; i++)
         {
-            title = newsSTWResponse.Data.Messages[i].Title.ToString();
-            body = newsSTWResponse.Data.Messages[i].Body.ToString();
+            title = newsSTWResponse.Data.Messages[i].Title;
+            body = newsSTWResponse.Data.Messages[i].Body;
             image = newsSTWResponse.Data.Messages[i].Image.ToString();
             Thread.Sleep(150);
             await bot.SendPhotoAsync(update.Message?.Chat.Id ?? 0, $"{image}", caption: $"{update.Message?.From?.FirstName}, держи новости Сражения с Бурей в Fortnite{ArrDataClass.SticerArr[count]}\n" +

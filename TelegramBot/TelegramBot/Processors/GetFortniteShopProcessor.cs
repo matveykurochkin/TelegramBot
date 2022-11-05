@@ -13,7 +13,7 @@ internal class GetFortniteShopProcessor : MessageProcessorBase, ITelegramMessage
         _logger.Debug("Get shop icon fortnite");
 
         var apiClient = new FortniteApiClient();
-        var shopResponse = await apiClient.V2.Shop.GetBrCombinedAsync(language: Fortnite_API.Objects.GameLanguage.RU);
+        var shopResponse = await apiClient.V2.Shop.GetBrCombinedAsync(language: Fortnite_API.Objects.GameLanguage.RU, token: cancellationToken);
         string? image, name, info, price;
 
         if (shopResponse.Status != 200)
@@ -26,8 +26,8 @@ internal class GetFortniteShopProcessor : MessageProcessorBase, ITelegramMessage
                 if (shopResponse.Data.Featured.Entries[i].Items[j] != null)
                 {
                     image = shopResponse.Data.Featured.Entries[i].Items[j].Images.Icon.ToString();
-                    name = shopResponse.Data.Featured.Entries[i].Items[j].Name.ToString();
-                    info = shopResponse.Data.Featured.Entries[i].Items[j].Description.ToString();
+                    name = shopResponse.Data.Featured.Entries[i].Items[j].Name;
+                    info = shopResponse.Data.Featured.Entries[i].Items[j].Description;
                     price = shopResponse.Data.Featured.Entries[i + j].FinalPrice.ToString();
                     Thread.Sleep(150);
                     await bot.SendPhotoAsync(update.Message?.Chat.Id ?? 0, $"{image}", $"{name}\nЦена: {price} VB\n{info}", cancellationToken: cancellationToken);

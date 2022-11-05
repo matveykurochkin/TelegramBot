@@ -24,8 +24,8 @@ internal class GetFortniteBundleShopProcessor : MessageProcessorBase, ITelegramM
             if (shopResponse.Data.Featured.Entries[i].Bundle != null)
             {
                 var imageLink = shopResponse.Data.Featured.Entries[i].Bundle.Image.ToString();
-                var name = shopResponse.Data.Featured.Entries[i].Bundle.Name.ToString();
-                var info = shopResponse.Data.Featured.Entries[i].Bundle.Info.ToString();
+                var name = shopResponse.Data.Featured.Entries[i].Bundle.Name;
+                var info = shopResponse.Data.Featured.Entries[i].Bundle.Info;
                 var price = shopResponse.Data.Featured.Entries[i].RegularPrice.ToString();
                 var salePrice = shopResponse.Data.Featured.Entries[i].FinalPrice.ToString();
                 Thread.Sleep(150);

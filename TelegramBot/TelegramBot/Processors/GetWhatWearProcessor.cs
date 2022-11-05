@@ -18,11 +18,11 @@ public class GetWhatWearProcessor : MessageProcessorBase, ITelegramMessageProces
     {
         _logger.Debug("What to wear answer");
         var count = _random.Next(ArrDataClass.SticerArr.Length);
-        var AppName = new ConfigurationBuilder().AddJsonFile("appsettings.json")
+        var appName = new ConfigurationBuilder().AddJsonFile("appsettings.json")
                                                 .Build()
                                                 .GetSection("APIWeather")["TokenWeatherID"];
 
-        if (!string.IsNullOrEmpty(AppName))
+        if (!string.IsNullOrEmpty(appName))
         {
             _nameofCity = "Владимир";
             await WhatWear(cityName: _nameofCity, cancellationToken);
@@ -42,17 +42,17 @@ public class GetWhatWearProcessor : MessageProcessorBase, ITelegramMessageProces
             }
         }
 
-        async Task WhatWear(string? cityName, CancellationToken cancellationToken)
+        async Task WhatWear(string? cityName, CancellationToken ct)
         {
             _logger.Debug("Try to get What Wear");
 
-            string appid = _weatherOptions.EsureValidTokenWeather(AppName);
+            string appid = _weatherOptions.EsureValidTokenWeather(appName);
 
             try
             {
                 var url = $"https://api.openweathermap.org/data/2.5/weather?q={HttpUtility.UrlEncode(cityName)}&appid={HttpUtility.UrlEncode(appid)}&units=metric";
                 using var hc = new HttpClient();
-                var weather = await hc.GetFromJsonAsync<WeatherResponse>(url, cancellationToken);
+                var weather = await hc.GetFromJsonAsync<WeatherResponse>(url, ct);
                 if (weather != null)
                 {
                     _tempOfCity = Math.Round(weather.main.temp);

@@ -5,6 +5,7 @@ using TelegramBot.Internal;
 namespace TelegramBot.Processors;
 
 [TelegramCommand("Fortnite меню 👾", "/menufortnite")]
+// ReSharper disable once InconsistentNaming
 internal class GetFortniteBRButtonProcessor : MessageProcessorBase, ITelegramMessageProcessor
 {
     public async Task ProcessMessage(ITelegramBotClient bot, Update update, CancellationToken cancellationToken)

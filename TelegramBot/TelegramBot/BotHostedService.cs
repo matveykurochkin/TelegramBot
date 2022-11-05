@@ -16,15 +16,16 @@ namespace TelegramBot
             _opts = opts.Value;
         }
 
+        // ReSharper disable once InconsistentNaming
         private static readonly ILogger _logger = LogManager.GetCurrentClassLogger();
-        private ITelegramBotClient? _bot = null;
+        private ITelegramBotClient? _bot;
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(_opts.Token))
                 throw new ArgumentNullException(nameof(_opts.Token), "Token must not be empty");
             _bot = new TelegramBotClient(_opts.Token);
             var tgBot = new MyTelegramBot(_bot);
-            var user = await _bot.GetMeAsync();
+            var user = await _bot.GetMeAsync(cancellationToken);
             _logger.Info($"Бот {@user} успешно запущен!", user);
             var receiverOptions = new ReceiverOptions();
             _logger.Debug("bot starting receive message");
