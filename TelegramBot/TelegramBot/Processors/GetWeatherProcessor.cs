@@ -8,19 +8,20 @@ using TelegramBot.Internal;
 
 namespace TelegramBot.Processors;
 
-[TelegramCommand("Владимир", "Головино", "Москва", "Санкт-Петербург", "Боголюбово", "Гусь-Хрустальный", "Дубай", "Сочи" )]
+[TelegramCommand("Владимир", "Головино", "Москва", "Санкт-Петербург", "Боголюбово", "Гусь-Хрустальный", "Дубай", "Сочи")]
 internal class GetWeatherProcessor : MessageProcessorBase, ITelegramMessageProcessor
 {
     private string? _nameofCity, _cloud;
     private int _clouds, _pressure, _humidity;
     private double _tempOfCity, _fellsLikeOfCity, _speed;
-    DateTime _sunRiseDate, _sunSetDate;
-    WeatherOptions _weatherOptions = new WeatherOptions();
+    private DateTime _sunRiseDate, _sunSetDate;
+    private readonly WeatherOptions _weatherOptions = new();
+
     public async Task ProcessMessage(ITelegramBotClient bot, Update update, CancellationToken cancellationToken)
     {
         var appName = new ConfigurationBuilder().AddJsonFile("appsettings.json")
-                        .Build()
-                        .GetSection("APIWeather")["TokenWeatherID"];
+            .Build()
+            .GetSection("APIWeather")["TokenWeatherID"];
 
         if (!string.IsNullOrEmpty(appName))
         {
@@ -34,9 +35,9 @@ internal class GetWeatherProcessor : MessageProcessorBase, ITelegramMessageProce
             else if (_clouds is >= 41 and <= 120)
                 _cloud = "☁";
             await bot.SendTextMessageAsync(update.Message?.Chat.Id ?? 0, $"Температура в {_nameofCity}: {_tempOfCity} °C {_cloud}\nОщущается как {_fellsLikeOfCity} °C\n" +
-                                                                           $"Влажность воздуха: {_humidity}%\nСкорость ветра: {_speed} м/с\n" +
-                                                                           $"Атмосферное давление: {Math.Round(_pressure * 0.75)} мм рт.ст.\n" +
-                                                                           $"Восход: {_sunRiseDate}\nЗакат: {_sunSetDate}", cancellationToken: cancellationToken);
+                                                                         $"Влажность воздуха: {_humidity}%\nСкорость ветра: {_speed} м/с\n" +
+                                                                         $"Атмосферное давление: {Math.Round(_pressure * 0.75)} мм рт.ст.\n" +
+                                                                         $"Восход: {_sunRiseDate}\nЗакат: {_sunSetDate}", cancellationToken: cancellationToken);
         }
 
         async Task Weather(string? cityName, CancellationToken ct)
