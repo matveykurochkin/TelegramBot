@@ -4,7 +4,7 @@ using TelegramBot.Internal;
 
 namespace TelegramBot.Processors;
 
-[TelegramCommand("Посмотреть другие фишки 😉", "/otherfeaturesfortnite")]
+[TelegramCommand("Посмотреть другие фишки 😉", "/otherfeatures")]
 public class GetOtherFeatureProcessor : MessageProcessorBase, ITelegramMessageProcessor
 {
     public async Task ProcessMessage(ITelegramBotClient bot, Update update, CancellationToken cancellationToken)

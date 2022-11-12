@@ -3,7 +3,6 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 
 namespace TelegramBot;
-
 class MyTelegramBot
 {
     // ReSharper disable once InconsistentNaming

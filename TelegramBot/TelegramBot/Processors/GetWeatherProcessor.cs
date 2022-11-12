@@ -19,11 +19,11 @@ internal class GetWeatherProcessor : MessageProcessorBase, ITelegramMessageProce
 
     public async Task ProcessMessage(ITelegramBotClient bot, Update update, CancellationToken cancellationToken)
     {
-        var appName = new ConfigurationBuilder().AddJsonFile("appsettings.json")
+        var tokenWeatherAPI = new ConfigurationBuilder().AddJsonFile("appsettings.json")
             .Build()
             .GetSection("APIWeather")["TokenWeatherID"];
 
-        if (!string.IsNullOrEmpty(appName))
+        if (!string.IsNullOrEmpty(tokenWeatherAPI))
         {
             _logger.Debug("Weather response");
             _nameofCity = update.Message?.Text;
@@ -44,7 +44,7 @@ internal class GetWeatherProcessor : MessageProcessorBase, ITelegramMessageProce
         {
             _logger.Debug("Try to get weather");
 
-            string appid = _weatherOptions.EsureValidTokenWeather(appName);
+            string appid = _weatherOptions.EsureValidTokenWeather(tokenWeatherAPI);
 
             try
             {

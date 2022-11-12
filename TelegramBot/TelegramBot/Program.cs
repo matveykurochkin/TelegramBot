@@ -5,7 +5,6 @@ using NLog;
 using TelegramBot.Configuration;
 
 namespace TelegramBot;
-
 static class Program
 {
     static async Task Main(string[] args)

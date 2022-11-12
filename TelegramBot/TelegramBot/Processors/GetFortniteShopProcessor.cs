@@ -14,11 +14,13 @@ internal class GetFortniteShopProcessor : MessageProcessorBase, ITelegramMessage
 
         var apiClient = new FortniteApiClient();
         var shopResponse = await apiClient.V2.Shop.GetBrCombinedAsync(language: Fortnite_API.Objects.GameLanguage.RU, token: cancellationToken);
+        var count = _random.Next(ArrDataClass.SticerArr.Length);
         string? image, name, info, price;
 
         if (shopResponse.Status != 200)
             throw new InvalidOperationException($"Error call api: {shopResponse.Error}");
 
+        await bot.SendTextMessageAsync(update.Message?.Chat.Id ?? 0, $"{update.Message?.From?.FirstName}, держи магазин предметов Королевской Битвы Fortnite! {ArrDataClass.SticerArr[count]}", cancellationToken: cancellationToken);
         for (int i = 0; i < shopResponse.Data.Featured.Entries.Count; i++)
         {
             for (int j = 0; j < shopResponse.Data.Featured.Entries[i].Items.Count; j++)

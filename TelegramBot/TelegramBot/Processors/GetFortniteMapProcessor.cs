@@ -24,6 +24,6 @@ public class GetFortniteMapProcessor : MessageProcessorBase, ITelegramMessagePro
         
         using var hc = new HttpClient();
         await using var photoStream = await hc.GetStreamAsync(imageLink, cancellationToken);
-        await telegramBotClient.SendPhotoAsync(update.Message?.Chat.Id ?? 0, new InputOnlineFile(photoStream), $"Map Fortnite {ArrDataClass.SticerArr[count]}", cancellationToken: cancellationToken);
+        await telegramBotClient.SendPhotoAsync(update.Message?.Chat.Id ?? 0, new InputOnlineFile(photoStream), $"{update.Message?.From?.FirstName}, держи карту текущего сезона Fortnite {ArrDataClass.SticerArr[count]}", cancellationToken: cancellationToken);
     }
 }

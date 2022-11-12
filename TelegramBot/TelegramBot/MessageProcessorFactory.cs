@@ -4,7 +4,6 @@ using NLog;
 using TelegramBot.Internal;
 
 namespace TelegramBot;
-
 public class MessageProcessorFactory
 {
     // ReSharper disable once InconsistentNaming
