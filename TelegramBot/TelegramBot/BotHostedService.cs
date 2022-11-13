@@ -4,6 +4,7 @@ using NLog;
 using Telegram.Bot;
 using Telegram.Bot.Extensions.Polling;
 using TelegramBot.Configuration;
+using TelegramBot.Processors;
 
 namespace TelegramBot;
 internal class BotHostedService : IHostedService
@@ -30,6 +31,11 @@ internal class BotHostedService : IHostedService
         _logger.Debug("bot starting receive message");
         _bot.StartReceiving(tgBot.UpdateHandler, tgBot.ErrorHandler, receiverOptions, CancellationToken.None);
         _logger.Debug("bot started to receive messages");
+        //запускаем прогрев кеша в отдельном потоке, чтобы он не занимал время в методе Start у сервиса
+        await Task.Factory.StartNew(async () =>
+        {
+            await GetFortniteMapProcessor.WarmCache(CancellationToken.None);
+        }, CancellationToken.None);
     }
 
     public Task StopAsync(CancellationToken cancellationToken)

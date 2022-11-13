@@ -51,7 +51,11 @@ public class GetWhatWearProcessor : MessageProcessorBase, ITelegramMessageProces
             try
             {
                 var url = $"https://api.openweathermap.org/data/2.5/weather?q={HttpUtility.UrlEncode(cityName)}&appid={HttpUtility.UrlEncode(appid)}&units=metric";
-                using var hc = new HttpClient();
+                using var hc = new HttpClient
+                {
+                    Timeout = TimeSpan.FromSeconds(5)
+                };
+                
                 var weather = await hc.GetFromJsonAsync<WeatherResponse>(url, ct);
                 if (weather != null)
                 {
