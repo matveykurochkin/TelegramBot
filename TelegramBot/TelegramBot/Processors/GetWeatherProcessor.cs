@@ -23,6 +23,10 @@ internal class GetWeatherProcessor : MessageProcessorBase, ITelegramMessageProce
             .Build()
             .GetSection("APIWeather")["TokenWeatherID"];
 
+        var timeOut = new ConfigurationBuilder().AddJsonFile("appsettings.json")
+            .Build()
+            .GetSection("TimeOutWeatherResponse")["timeOut"];
+
         if (!string.IsNullOrEmpty(tokenWeatherAPI))
         {
             try
@@ -44,21 +48,28 @@ internal class GetWeatherProcessor : MessageProcessorBase, ITelegramMessageProce
             catch (Exception e)
             {
                 _logger.Error(e, "Error while request weather");
-                await bot.SendTextMessageAsync(update.Message?.Chat.Id ?? 0, "Нет информации по погоде в вашем городе, попробуйте ещё разок запросить попозже", cancellationToken: cancellationToken);
+                await bot.SendTextMessageAsync(update.Message?.Chat.Id ?? 0, "В данный момент бот не может показать погоду в выбранном городе. Попробуйте позже!", cancellationToken: cancellationToken);
             }
         }
 
         async Task Weather(string? cityName, CancellationToken ct)
         {
             _logger.Debug("Try to get weather");
-
             string appid = _weatherOptions.EsureValidTokenWeather(tokenWeatherAPI);
+            HttpClient hc;
 
             var url = $"https://api.openweathermap.org/data/2.5/weather?q={HttpUtility.UrlEncode(cityName)}&appid={HttpUtility.UrlEncode(appid)}&units=metric";
-            using var hc = new HttpClient()
-            {
-                Timeout = TimeSpan.FromSeconds(5)
-            };
+
+            if (double.TryParse(timeOut, out var parsedNumber) && parsedNumber > 0)
+                hc = new HttpClient()
+                {
+                    Timeout = TimeSpan.FromSeconds(parsedNumber)
+                };
+            else
+                hc = new HttpClient()
+                {
+                    Timeout = TimeSpan.FromSeconds(5)
+                };
 
             var weather = await hc.GetFromJsonAsync<WeatherResponse>(url, ct);
             if (weather != null)

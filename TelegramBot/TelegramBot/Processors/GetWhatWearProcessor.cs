@@ -14,48 +14,66 @@ public class GetWhatWearProcessor : MessageProcessorBase, ITelegramMessageProces
     private double _tempOfCity;
     private string? _nameofCity;
     WeatherOptions _weatherOptions = new WeatherOptions();
+
     public async Task ProcessMessage(ITelegramBotClient bot, Update update, CancellationToken cancellationToken)
     {
         _logger.Debug("What to wear answer");
         var count = _random.Next(ArrDataClass.SticerArr.Length);
-        var appName = new ConfigurationBuilder().AddJsonFile("appsettings.json")
-                                                .Build()
-                                                .GetSection("APIWeather")["TokenWeatherID"];
+        var tokenWeatherAPI = new ConfigurationBuilder().AddJsonFile("appsettings.json")
+            .Build()
+            .GetSection("APIWeather")["TokenWeatherID"];
 
-        if (!string.IsNullOrEmpty(appName))
+        var timeOut = new ConfigurationBuilder().AddJsonFile("appsettings.json")
+            .Build()
+            .GetSection("TimeOutWeatherResponse")["timeOut"];
+
+        if (!string.IsNullOrEmpty(tokenWeatherAPI))
         {
-            _nameofCity = "Владимир";
-            await WhatWear(cityName: _nameofCity, cancellationToken);
-
-
-            if (_tempOfCity is <= 5 and <= 20)
+            try
             {
-                await bot.SendTextMessageAsync(update.Message?.Chat.Id ?? 0, $"В {_nameofCity} сейчас {_tempOfCity}°C, это холодновато, советую надеть вещи потеплее! {ArrDataClass.SticerArr[count]}", cancellationToken: cancellationToken);
+                _nameofCity = "Владимир";
+                await WhatWear(cityName: _nameofCity, cancellationToken);
+            
+                if (_tempOfCity is <= 5 and <= 20)
+                {
+                    await bot.SendTextMessageAsync(update.Message?.Chat.Id ?? 0, $"В {_nameofCity} сейчас {_tempOfCity}°C, это холодновато, советую надеть вещи потеплее! {ArrDataClass.SticerArr[count]}", cancellationToken: cancellationToken);
+                }
+                else if (_tempOfCity is >= 6 and <= 15)
+                {
+                    await bot.SendTextMessageAsync(update.Message?.Chat.Id ?? 0, $"В {_nameofCity} сейчас {_tempOfCity}°C, это конечно тепло, но кофточку лучше накинуть! {ArrDataClass.SticerArr[count]}", cancellationToken: cancellationToken);
+                }
+                else if (_tempOfCity is >= 16 and <= 100)
+                {
+                    await bot.SendTextMessageAsync(update.Message?.Chat.Id ?? 0, $"В {_nameofCity} сейчас {_tempOfCity}°C, это жарко, можешь расслабиться и надеть свою любимую футболочку с шортами! {ArrDataClass.SticerArr[count]}", cancellationToken: cancellationToken);
+                }
             }
-            else if (_tempOfCity is >= 6 and <= 15)
+            catch (Exception e)
             {
-                await bot.SendTextMessageAsync(update.Message?.Chat.Id ?? 0, $"В {_nameofCity} сейчас {_tempOfCity}°C, это конечно тепло, но кофточку лучше накинуть! {ArrDataClass.SticerArr[count]}", cancellationToken: cancellationToken);
-            }
-            else if (_tempOfCity is >= 16 and <= 100)
-            {
-                await bot.SendTextMessageAsync(update.Message?.Chat.Id ?? 0, $"В {_nameofCity} сейчас {_tempOfCity}°C, это жарко, можешь расслабиться и надеть свою любимую футболочку с шортами! {ArrDataClass.SticerArr[count]}", cancellationToken: cancellationToken);
+                _logger.Error(e, "Error while request weather");
+                await bot.SendTextMessageAsync(update.Message?.Chat.Id ?? 0, "В данный момент бот не может подсказать что надеть. Попробуйте позже!", cancellationToken: cancellationToken);
             }
         }
 
         async Task WhatWear(string? cityName, CancellationToken ct)
         {
             _logger.Debug("Try to get What Wear");
-
-            string appid = _weatherOptions.EsureValidTokenWeather(appName);
+            string appid = _weatherOptions.EsureValidTokenWeather(tokenWeatherAPI);
 
             try
             {
+                HttpClient hc;
                 var url = $"https://api.openweathermap.org/data/2.5/weather?q={HttpUtility.UrlEncode(cityName)}&appid={HttpUtility.UrlEncode(appid)}&units=metric";
-                using var hc = new HttpClient
-                {
-                    Timeout = TimeSpan.FromSeconds(5)
-                };
-                
+                if (double.TryParse(timeOut, out var parsedNumber) && parsedNumber > 0)
+                    hc = new HttpClient()
+                    {
+                        Timeout = TimeSpan.FromSeconds(parsedNumber)
+                    };
+                else
+                    hc = new HttpClient()
+                    {
+                        Timeout = TimeSpan.FromSeconds(5)
+                    };
+
                 var weather = await hc.GetFromJsonAsync<WeatherResponse>(url, ct);
                 if (weather != null)
                 {
