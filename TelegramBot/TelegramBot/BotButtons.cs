@@ -24,7 +24,6 @@ public class BotButtons
         return tgButton;
     }
 
-    // ReSharper disable once InconsistentNaming
     public static IReplyMarkup ButtonBR()
     {
         var tgButton = new ReplyKeyboardMarkup(new[]

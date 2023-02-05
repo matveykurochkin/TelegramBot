@@ -5,13 +5,11 @@ using Telegram.Bot.Types;
 namespace TelegramBot;
 class MyTelegramBot
 {
-    // ReSharper disable once InconsistentNaming
     private static readonly ILogger _logger = LogManager.GetCurrentClassLogger();
 
     private readonly ITelegramBotClient _telegramBotClient;
     private readonly MessageProcessorFactory _processorFactory = new();
 
-    // ReSharper disable once InconsistentNaming
     protected static readonly Random _random = new();
 
     public MyTelegramBot(ITelegramBotClient telegramBotClient)

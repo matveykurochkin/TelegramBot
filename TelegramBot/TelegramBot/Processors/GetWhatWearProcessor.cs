@@ -19,15 +19,23 @@ public class GetWhatWearProcessor : MessageProcessorBase, ITelegramMessageProces
     {
         _logger.Debug("What to wear answer");
         var count = _random.Next(ArrDataClass.SticerArr.Length);
+
         var tokenWeatherAPI = new ConfigurationBuilder().AddJsonFile("appsettings.json")
             .Build()
             .GetSection("APIWeather")["TokenWeatherID"];
+
+        _nameofCity = new ConfigurationBuilder().AddJsonFile("appsettings.json")
+           .Build()
+           .GetSection("WearCity")["nameOfCity"];
 
         if (!string.IsNullOrEmpty(tokenWeatherAPI))
         {
             try
             {
-                _nameofCity = "Владимир";
+
+                if (_nameofCity == "")
+                    _nameofCity = "Владимир";
+
                 await WhatWear(cityName: _nameofCity, cancellationToken);
 
                 if (_tempOfCity is <= 5 and <= 20)
