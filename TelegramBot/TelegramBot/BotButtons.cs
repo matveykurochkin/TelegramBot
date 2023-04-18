@@ -17,6 +17,10 @@ public class BotButtons
         },
         new[]
         {
+            new KeyboardButton("Загрузить стикеры 🎁")
+        },
+        new[]
+        {
             new KeyboardButton("Посмотреть другие фишки 😉")
         }
     });
